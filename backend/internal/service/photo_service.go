@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"mime/multipart"
 	"time"
 
 	"github.com/eralove/eralove-backend/internal/domain"
@@ -12,21 +13,24 @@ import (
 
 // PhotoService implements domain.PhotoService
 type PhotoService struct {
-	photoRepo domain.PhotoRepository
-	userRepo  domain.UserRepository
-	logger    *zap.Logger
+	photoRepo      domain.PhotoRepository
+	userRepo       domain.UserRepository
+	storageService domain.StorageService
+	logger         *zap.Logger
 }
 
 // NewPhotoService creates a new photo service
 func NewPhotoService(
 	photoRepo domain.PhotoRepository,
 	userRepo domain.UserRepository,
+	storageService domain.StorageService,
 	logger *zap.Logger,
 ) domain.PhotoService {
 	return &PhotoService{
-		photoRepo: photoRepo,
-		userRepo:  userRepo,
-		logger:    logger,
+		photoRepo:      photoRepo,
+		userRepo:       userRepo,
+		storageService: storageService,
+		logger:         logger,
 	}
 }
 
@@ -38,14 +42,66 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 		return nil, fmt.Errorf("user not found")
 	}
 
+	var imageURL string
+	
+	// Handle file upload if file is provided
+	if file != nil {
+		if fileHeader, ok := file.(*multipart.FileHeader); ok {
+			// Open the uploaded file
+			src, err := fileHeader.Open()
+			if err != nil {
+				s.logger.Error("Failed to open uploaded file", zap.Error(err))
+				return nil, fmt.Errorf("failed to open file")
+			}
+			defer src.Close()
+
+			// Validate file type and size
+			if err := domain.ValidateImageFile(fileHeader.Header.Get("Content-Type"), fileHeader.Size); err != nil {
+				return nil, fmt.Errorf("invalid file: %w", err)
+			}
+
+			// Upload to storage
+			uploadReq := &domain.UploadRequest{
+				File:        src,
+				Filename:    fileHeader.Filename,
+				ContentType: fileHeader.Header.Get("Content-Type"),
+				Size:        fileHeader.Size,
+				Folder:      "photos",
+				UserID:      userID.Hex(),
+			}
+
+			fileInfo, err := s.storageService.Upload(ctx, uploadReq)
+			if err != nil {
+				s.logger.Error("Failed to upload file to storage", zap.Error(err))
+				return nil, fmt.Errorf("failed to upload file")
+			}
+
+			imageURL = fileInfo.URL
+			s.logger.Info("File uploaded successfully", 
+				zap.String("key", fileInfo.Key),
+				zap.String("url", fileInfo.URL))
+		}
+	} else if req.ImageURL != "" {
+		// Use provided URL if no file uploaded
+		imageURL = req.ImageURL
+	} else {
+		return nil, fmt.Errorf("either file or image URL is required")
+	}
+
+	// Set default date if not provided
+	photoDate := req.Date
+	if photoDate.IsZero() {
+		photoDate = time.Now()
+	}
+
 	// Create photo
 	photo := &domain.Photo{
 		UserID:      userID,
 		PartnerID:   user.PartnerID,
 		Title:       req.Title,
 		Description: req.Description,
-		ImageURL:    req.ImageURL,
-		Date:        req.Date,
+		ImageURL:    imageURL,
+		Date:        photoDate,
 		Location:    req.Location,
 		Tags:        req.Tags,
 		IsPrivate:   req.IsPrivate,
@@ -58,7 +114,8 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 
 	s.logger.Info("Photo created successfully",
 		zap.String("photo_id", photo.ID.Hex()),
-		zap.String("user_id", userID.Hex()))
+		zap.String("user_id", userID.Hex()),
+		zap.String("image_url", imageURL))
 
 	return photo.ToResponse(), nil
 }

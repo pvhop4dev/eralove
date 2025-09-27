@@ -12,6 +12,7 @@ import (
 	"github.com/eralove/eralove-backend/internal/infrastructure/auth"
 	"github.com/eralove/eralove-backend/internal/infrastructure/cache"
 	"github.com/eralove/eralove-backend/internal/infrastructure/database"
+	"github.com/eralove/eralove-backend/internal/infrastructure/email"
 	"github.com/eralove/eralove-backend/internal/infrastructure/i18n"
 	"github.com/eralove/eralove-backend/internal/repository"
 	"github.com/eralove/eralove-backend/internal/service"
@@ -120,13 +121,21 @@ func New(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: errorHandler,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	})
 
 	// Initialize dependencies
 	validator := validator.New()
 	i18nService := i18n.NewI18n(logger)
+	
+	// Load translation messages
+	if err := i18nService.LoadMessages("./messages"); err != nil {
+		logger.Warn("Failed to load translation messages", zap.Error(err))
+	}
+	
+	emailService := email.NewEmailService(cfg, logger)
+
+	// Initialize auth managers
 	passwordManager := auth.NewPasswordManager()
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiration, cfg.JWTRefreshExpiration)
 
@@ -135,7 +144,7 @@ func New(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	// Note: PhotoRepository is now handled by Wire dependency injection
 
 	// Initialize services
-	userService := service.NewUserService(userRepo, passwordManager, jwtManager, logger)
+	userService := service.NewUserService(userRepo, passwordManager, jwtManager, emailService, logger)
 	// Note: PhotoService is now handled by Wire dependency injection
 
 	// Initialize handlers
@@ -202,13 +211,29 @@ func setupMiddleware(app *fiber.App, cfg *config.Config, logger *zap.Logger) {
 	app.Use(recover.New())
 
 	// CORS middleware
-	origins := strings.Split(cfg.CORSOrigins, ",")
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     strings.Join(origins, ","),
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Requested-With",
+	corsConfig := cors.Config{
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Requested-With,Access-Control-Allow-Origin",
 		AllowCredentials: true,
-	}))
+		ExposeHeaders:    "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type",
+	}
+
+	if cfg.IsDevelopment() {
+		// Allow all origins in development
+		corsConfig.AllowOrigins = "*"
+		corsConfig.AllowCredentials = false // Cannot use credentials with wildcard origin
+	} else {
+		// Use specific origins in production
+		origins := strings.Split(cfg.CORSOrigins, ",")
+		corsConfig.AllowOrigins = strings.Join(origins, ",")
+	}
+
+	app.Use(cors.New(corsConfig))
+
+	// Handle preflight requests
+	app.Options("/*", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusNoContent)
+	})
 }
 
 // setupRoutes configures application routes
@@ -227,12 +252,16 @@ func setupRoutes(app *fiber.App, userHandler *handler.UserHandler, jwtManager *a
 	// API routes
 	api := app.Group("/api/v1")
 
-	// Auth routes (no authentication required)
+	// Auth routes
 	auth := api.Group("/auth")
 	auth.Post("/register", userHandler.Register)
 	auth.Post("/login", userHandler.Login)
 	auth.Post("/refresh", userHandler.RefreshToken)
 	auth.Post("/logout", userHandler.Logout)
+	auth.Post("/verify-email", userHandler.VerifyEmail)
+	auth.Post("/resend-verification", userHandler.ResendVerificationEmail)
+	auth.Post("/forgot-password", userHandler.ForgotPassword)
+	auth.Post("/reset-password", userHandler.ResetPassword)
 
 	// Protected routes (authentication required)
 	protected := api.Group("/", jwtMiddleware(jwtManager, logger))

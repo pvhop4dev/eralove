@@ -31,7 +31,7 @@ services:
     networks:
       - eralove-dev-network
 
-  # Backend API (Development mode with hot reload)
+  # Backend API (Development mode)
   backend-dev:
     build:
       context: ./backend
@@ -59,7 +59,6 @@ services:
     volumes:
       - ./backend:/app
       - /app/vendor
-    command: ["air", "-c", ".air.toml"]
 
   # Note: Frontend runs separately using `npm run dev` for better development experience
 

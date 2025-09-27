@@ -51,14 +51,17 @@ func NewPhotoHandler(
 // @Failure 401 {object} ErrorResponse
 // @Router /photos [post]
 func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
+	LogRequestStart(h.logger, c, "Create photo")
+	
 	userID := getUserIDFromContext(c)
 
 	// Handle file upload
 	file, err := c.FormFile("file")
 	if err != nil {
+		LogRequestError(h.logger, c, "File upload failed", err)
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "File is required",
-			Message: "Please provide a photo file",
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
@@ -69,23 +72,39 @@ func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
 		Tags:        parseCommaSeparatedTags(c.FormValue("tags")),
 	}
 
+	LogRequestParsed(h.logger, "Create photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("title", req.Title),
+		zap.String("filename", file.Filename))
+
 	// Validate request
-	if err := h.validator.Struct(req); err != nil {
+	if err := h.validator.Struct(&req); err != nil {
+		LogValidationError(h.logger, err, "Create photo", 
+			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
+
+	LogServiceCall(h.logger, "Create photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("filename", file.Filename))
 
 	// Create photo
 	photo, err := h.photoService.CreatePhoto(c.Context(), userID, &req, file)
 	if err != nil {
-		h.logger.Error("Failed to create photo", zap.Error(err))
+		LogServiceError(h.logger, err, "Create photo", 
+			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to create photo",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
+
+	LogServiceSuccess(h.logger, "Create photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photo.ID.Hex()))
 
 	return c.Status(fiber.StatusCreated).JSON(photo)
 }
@@ -103,6 +122,8 @@ func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
 // @Failure 401 {object} ErrorResponse
 // @Router /photos [get]
 func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
+	LogRequestStart(h.logger, c, "Get photos")
+	
 	userID := getUserIDFromContext(c)
 
 	// Parse query parameters
@@ -117,14 +138,29 @@ func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
 		}
 	}
 
+	LogRequestParsed(h.logger, "Get photos", 
+		zap.String("user_id", userID.Hex()),
+		zap.Int("page", page),
+		zap.Int("limit", limit),
+		zap.String("partner_id", partnerIDStr))
+
+	LogServiceCall(h.logger, "Get photos", 
+		zap.String("user_id", userID.Hex()))
+
 	photos, total, err := h.photoService.GetUserPhotos(c.Context(), userID, partnerID, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get photos", zap.Error(err))
+		LogServiceError(h.logger, err, "Get photos", 
+			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get photos",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
+
+	LogServiceSuccess(h.logger, "Get photos", 
+		zap.String("user_id", userID.Hex()),
+		zap.Int64("total", total),
+		zap.Int("count", len(photos)))
 
 	return c.JSON(domain.PhotoListResponse{
 		Photos: photos,
@@ -146,23 +182,38 @@ func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
 // @Failure 401 {object} ErrorResponse
 // @Router /photos/{id} [get]
 func (h *PhotoHandler) GetPhoto(c *fiber.Ctx) error {
+	LogRequestStart(h.logger, c, "Get photo")
+	
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
+		LogValidationError(h.logger, err, "Get photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid photo ID",
-			Message: "Photo ID must be a valid ObjectID",
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
+	LogServiceCall(h.logger, "Get photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
+
 	photo, err := h.photoService.GetPhoto(c.Context(), photoID, userID)
 	if err != nil {
-		h.logger.Error("Failed to get photo", zap.Error(err))
+		LogServiceError(h.logger, err, "Get photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
 			Error:   "Photo not found",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "not_found", nil),
 		})
 	}
+
+	LogServiceSuccess(h.logger, "Get photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
 
 	return c.JSON(photo)
 }
@@ -181,38 +232,62 @@ func (h *PhotoHandler) GetPhoto(c *fiber.Ctx) error {
 // @Failure 404 {object} ErrorResponse
 // @Router /photos/{id} [put]
 func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
+	LogRequestStart(h.logger, c, "Update photo")
+	
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
+		LogValidationError(h.logger, err, "Update photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid photo ID",
-			Message: "Photo ID must be a valid ObjectID",
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
 	var req domain.UpdatePhotoRequest
 	if err := c.BodyParser(&req); err != nil {
+		LogParsingError(h.logger, err, c, "Update photo")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid request body",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
-	if err := h.validator.Struct(req); err != nil {
+	LogRequestParsed(h.logger, "Update photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()),
+		zap.String("title", req.Title))
+
+	if err := h.validator.Struct(&req); err != nil {
+		LogValidationError(h.logger, err, "Update photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
+
+	LogServiceCall(h.logger, "Update photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
 
 	photo, err := h.photoService.UpdatePhoto(c.Context(), photoID, userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to update photo", zap.Error(err))
+		LogServiceError(h.logger, err, "Update photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to update photo",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
+
+	LogServiceSuccess(h.logger, "Update photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
 
 	return c.JSON(photo)
 }
@@ -229,23 +304,38 @@ func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
 // @Failure 401 {object} ErrorResponse
 // @Router /photos/{id} [delete]
 func (h *PhotoHandler) DeletePhoto(c *fiber.Ctx) error {
+	LogRequestStart(h.logger, c, "Delete photo")
+	
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
+		LogValidationError(h.logger, err, "Delete photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid photo ID",
-			Message: "Photo ID must be a valid ObjectID",
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
+	LogServiceCall(h.logger, "Delete photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
+
 	err = h.photoService.DeletePhoto(c.Context(), photoID, userID)
 	if err != nil {
-		h.logger.Error("Failed to delete photo", zap.Error(err))
+		LogServiceError(h.logger, err, "Delete photo", 
+			zap.String("user_id", userID.Hex()),
+			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to delete photo",
-			Message: err.Error(),
+			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
+
+	LogServiceSuccess(h.logger, "Delete photo", 
+		zap.String("user_id", userID.Hex()),
+		zap.String("photo_id", photoID.Hex()))
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

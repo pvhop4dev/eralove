@@ -48,7 +48,7 @@ docker-logs-frontend: ## Show frontend logs
 	docker-compose logs -f frontend
 
 # Docker Commands - Development
-docker-dev-up: ## Start development environment with hot reload
+docker-dev-up: ## Start development environment
 	docker-compose -f docker-compose.dev.yml up -d
 
 docker-dev-down: ## Stop development environment

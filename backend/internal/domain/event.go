@@ -24,6 +24,7 @@ type Event struct {
 	Reminder    *EventReminder     `json:"reminder,omitempty" bson:"reminder,omitempty"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	DeletedAt   *time.Time         `json:"-" bson:"deleted_at,omitempty"`
 }
 
 // EventReminder represents reminder settings for an event

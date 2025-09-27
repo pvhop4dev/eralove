@@ -1,0 +1,82 @@
+[
+  {
+    "id": "invalid_request",
+    "message": "Corps de requête invalide"
+  },
+  {
+    "id": "validation_failed",
+    "message": "Validation échouée"
+  },
+  {
+    "id": "user_created",
+    "message": "Utilisateur créé avec succès"
+  },
+  {
+    "id": "login_successful",
+    "message": "Connexion réussie"
+  },
+  {
+    "id": "logout_successful",
+    "message": "Déconnexion réussie"
+  },
+  {
+    "id": "email_verified",
+    "message": "Email vérifié avec succès"
+  },
+  {
+    "id": "verification_email_sent",
+    "message": "Email de vérification envoyé avec succès"
+  },
+  {
+    "id": "password_reset_email_sent",
+    "message": "Email de réinitialisation du mot de passe envoyé avec succès"
+  },
+  {
+    "id": "password_reset_successful",
+    "message": "Réinitialisation du mot de passe réussie"
+  },
+  {
+    "id": "profile_updated",
+    "message": "Profil mis à jour avec succès"
+  },
+  {
+    "id": "account_deleted",
+    "message": "Compte supprimé avec succès"
+  },
+  {
+    "id": "unauthorized",
+    "message": "Accès non autorisé"
+  },
+  {
+    "id": "forbidden",
+    "message": "Accès interdit"
+  },
+  {
+    "id": "not_found",
+    "message": "Ressource non trouvée"
+  },
+  {
+    "id": "internal_error",
+    "message": "Erreur interne du serveur"
+  },
+  {
+    "id": "invalid_credentials",
+    "message": "Email ou mot de passe invalide"
+  },
+  {
+    "id": "user_already_exists",
+    "message": "Un utilisateur avec cet email existe déjà"
+  },
+  {
+    "id": "email_not_verified",
+    "message": "Veuillez d'abord vérifier votre adresse email"
+  },
+  {
+    "id": "invalid_token",
+    "message": "Token invalide ou expiré"
+  },
+  {
+    "id": "token_expired",
+    "message": "Le token a expiré"
+  }
+]

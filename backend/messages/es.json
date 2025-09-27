@@ -1,0 +1,82 @@
+[
+  {
+    "id": "invalid_request",
+    "message": "Cuerpo de solicitud inválido"
+  },
+  {
+    "id": "validation_failed",
+    "message": "Validación fallida"
+  },
+  {
+    "id": "user_created",
+    "message": "Usuario creado exitosamente"
+  },
+  {
+    "id": "login_successful",
+    "message": "Inicio de sesión exitoso"
+  },
+  {
+    "id": "logout_successful",
+    "message": "Cierre de sesión exitoso"
+  },
+  {
+    "id": "email_verified",
+    "message": "Email verificado exitosamente"
+  },
+  {
+    "id": "verification_email_sent",
+    "message": "Email de verificación enviado exitosamente"
+  },
+  {
+    "id": "password_reset_email_sent",
+    "message": "Email de restablecimiento de contraseña enviado exitosamente"
+  },
+  {
+    "id": "password_reset_successful",
+    "message": "Restablecimiento de contraseña exitoso"
+  },
+  {
+    "id": "profile_updated",
+    "message": "Perfil actualizado exitosamente"
+  },
+  {
+    "id": "account_deleted",
+    "message": "Cuenta eliminada exitosamente"
+  },
+  {
+    "id": "unauthorized",
+    "message": "Acceso no autorizado"
+  },
+  {
+    "id": "forbidden",
+    "message": "Acceso prohibido"
+  },
+  {
+    "id": "not_found",
+    "message": "Recurso no encontrado"
+  },
+  {
+    "id": "internal_error",
+    "message": "Error interno del servidor"
+  },
+  {
+    "id": "invalid_credentials",
+    "message": "Email o contraseña inválidos"
+  },
+  {
+    "id": "user_already_exists",
+    "message": "Ya existe un usuario con este email"
+  },
+  {
+    "id": "email_not_verified",
+    "message": "Por favor verifica tu dirección de email primero"
+  },
+  {
+    "id": "invalid_token",
+    "message": "Token inválido o expirado"
+  },
+  {
+    "id": "token_expired",
+    "message": "El token ha expirado"
+  }
+]

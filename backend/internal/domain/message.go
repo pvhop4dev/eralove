@@ -19,6 +19,7 @@ type Message struct {
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
 	ReadAt     *time.Time         `bson:"read_at,omitempty" json:"read_at,omitempty"`
+	DeletedAt  *time.Time         `json:"-" bson:"deleted_at,omitempty"`
 }
 
 // Conversation represents a conversation summary

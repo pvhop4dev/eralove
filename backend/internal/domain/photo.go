@@ -21,6 +21,7 @@ type Photo struct {
 	IsPrivate   bool               `json:"is_private" bson:"is_private"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	DeletedAt   *time.Time         `json:"-" bson:"deleted_at,omitempty"`
 }
 
 // CreatePhotoRequest represents the request to create a new photo
@@ -89,6 +90,11 @@ type PhotoRepository interface {
 	Update(ctx context.Context, id primitive.ObjectID, photo *Photo) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	Search(ctx context.Context, userID primitive.ObjectID, query string, limit, offset int) ([]*Photo, error)
+	
+	// Soft delete management
+	Restore(ctx context.Context, id primitive.ObjectID) error
+	HardDelete(ctx context.Context, id primitive.ObjectID) error
+	ListDeleted(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*Photo, error)
 }
 
 // PhotoService defines the interface for photo business logic

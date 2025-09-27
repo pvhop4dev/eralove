@@ -41,6 +41,27 @@ type Config struct {
 	// Rate Limiting
 	RateLimitRequests int `env:"RATE_LIMIT_REQUESTS" envDefault:"100"`
 	RateLimitWindow   int `env:"RATE_LIMIT_WINDOW" envDefault:"60"` // seconds
+	
+	// Email Configuration
+	SMTPHost     string `env:"SMTP_HOST" envDefault:"smtp.gmail.com"`
+	SMTPPort     int    `env:"SMTP_PORT" envDefault:"587"`
+	SMTPUsername string `env:"SMTP_USERNAME" envDefault:""`
+	SMTPPassword string `env:"SMTP_PASSWORD" envDefault:""`
+	FromEmail    string `env:"FROM_EMAIL" envDefault:"noreply@eralove.com"`
+	FromName     string `env:"FROM_NAME" envDefault:"EraLove"`
+	
+	// Frontend URL for email links
+	FrontendURL string `env:"FRONTEND_URL" envDefault:"http://localhost:3000"`
+	
+	// Storage Configuration
+	StorageProvider     string `env:"STORAGE_PROVIDER" envDefault:"local"`        // local, s3
+	StorageRegion       string `env:"STORAGE_REGION" envDefault:"us-east-1"`
+	StorageBucket       string `env:"STORAGE_BUCKET" envDefault:"eralove-uploads"`
+	StorageAccessKeyID  string `env:"STORAGE_ACCESS_KEY_ID" envDefault:""`
+	StorageSecretKey    string `env:"STORAGE_SECRET_KEY" envDefault:""`
+	StorageEndpoint     string `env:"STORAGE_ENDPOINT" envDefault:""`             // For MinIO or custom S3
+	StorageUseSSL       bool   `env:"STORAGE_USE_SSL" envDefault:"true"`
+	StorageBaseURL      string `env:"STORAGE_BASE_URL" envDefault:"http://localhost:8080"` // For public file access
 }
 
 // Load loads configuration from environment variables

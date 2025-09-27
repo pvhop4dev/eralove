@@ -1,0 +1,86 @@
+[
+  {
+    "id": "invalid_request",
+    "message": "Invalid request body"
+  },
+  {
+    "id": "validation_failed",
+    "message": "Validation failed"
+  },
+  {
+    "id": "user_created",
+    "message": "User created successfully"
+  },
+  {
+    "id": "registration_success",
+    "message": "Registration successful! Please check your email to verify your account."
+  },
+  {
+    "id": "login_successful",
+    "message": "Login successful"
+  },
+  {
+    "id": "logout_successful",
+    "message": "Logout successful"
+  },
+  {
+    "id": "email_verified",
+    "message": "Email verified successfully"
+  },
+  {
+    "id": "verification_email_sent",
+    "message": "Verification email sent successfully"
+  },
+  {
+    "id": "password_reset_email_sent",
+    "message": "Password reset email sent successfully"
+  },
+  {
+    "id": "password_reset_successful",
+    "message": "Password reset successful"
+  },
+  {
+    "id": "profile_updated",
+    "message": "Profile updated successfully"
+  },
+  {
+    "id": "account_deleted",
+    "message": "Account deleted successfully"
+  },
+  {
+    "id": "unauthorized",
+    "message": "Unauthorized access"
+  },
+  {
+    "id": "forbidden",
+    "message": "Access forbidden"
+  },
+  {
+    "id": "not_found",
+    "message": "Resource not found"
+  },
+  {
+    "id": "internal_error",
+    "message": "Internal server error"
+  },
+  {
+    "id": "invalid_credentials",
+    "message": "Invalid email or password"
+  },
+  {
+    "id": "user_already_exists",
+    "message": "User with this email already exists"
+  },
+  {
+    "id": "email_not_verified",
+    "message": "Please verify your email address first"
+  },
+  {
+    "id": "invalid_token",
+    "message": "Invalid or expired token"
+  },
+  {
+    "id": "token_expired",
+    "message": "Token has expired"
+  }
+]

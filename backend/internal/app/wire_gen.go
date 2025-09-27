@@ -16,6 +16,10 @@ import (
 	"go.uber.org/zap"
 )
 
+import (
+	_ "github.com/eralove/eralove-backend/docs"
+)
+
 // Injectors from wire.go:
 
 // InitializeApp creates a new application with all dependencies injected
@@ -27,7 +31,8 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	userRepository := repository.ProvideUserRepository(mongoDB, logger)
 	passwordManager := infrastructure.ProvidePasswordManager()
 	jwtManager := infrastructure.ProvideJWTManager(cfg)
-	userService := service.ProvideUserService(userRepository, passwordManager, jwtManager, logger)
+	emailService := infrastructure.ProvideEmailService(cfg, logger)
+	userService := service.ProvideUserService(userRepository, passwordManager, jwtManager, emailService, logger)
 	validate := infrastructure.ProvideValidator()
 	i18n := infrastructure.ProvideI18n(logger)
 	userHandler := handler.ProvideUserHandler(userService, validate, i18n, logger)

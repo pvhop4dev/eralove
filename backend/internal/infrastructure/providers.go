@@ -2,10 +2,13 @@ package infrastructure
 
 import (
 	"github.com/eralove/eralove-backend/internal/config"
+	"github.com/eralove/eralove-backend/internal/domain"
 	"github.com/eralove/eralove-backend/internal/infrastructure/auth"
 	"github.com/eralove/eralove-backend/internal/infrastructure/cache"
 	"github.com/eralove/eralove-backend/internal/infrastructure/database"
+	"github.com/eralove/eralove-backend/internal/infrastructure/email"
 	"github.com/eralove/eralove-backend/internal/infrastructure/i18n"
+	"github.com/eralove/eralove-backend/internal/infrastructure/storage"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/wire"
 	"go.uber.org/zap"
@@ -17,8 +20,10 @@ var InfrastructureSet = wire.NewSet(
 	ProvideI18n,
 	ProvidePasswordManager,
 	ProvideJWTManager,
+	ProvideEmailService,
 	ProvideMongoDB,
 	ProvideRedis,
+	ProvideStorageService,
 )
 
 // ProvideValidator provides a validator instance
@@ -49,4 +54,30 @@ func ProvideMongoDB(cfg *config.Config, logger *zap.Logger) (*database.MongoDB, 
 // ProvideRedis provides a Redis connection
 func ProvideRedis(cfg *config.Config, logger *zap.Logger) (*cache.Redis, error) {
 	return cache.NewRedis(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB, logger)
+}
+
+// ProvideEmailService provides an email service
+func ProvideEmailService(cfg *config.Config, logger *zap.Logger) *email.EmailService {
+	return email.NewEmailService(cfg, logger)
+}
+
+// ProvideStorageService provides a storage service
+func ProvideStorageService(cfg *config.Config, logger *zap.Logger) (domain.StorageService, error) {
+	// Create storage configuration from config
+	storageConfig := &domain.StorageConfig{
+		Provider:        cfg.StorageProvider,
+		Region:          cfg.StorageRegion,
+		Bucket:          cfg.StorageBucket,
+		AccessKeyID:     cfg.StorageAccessKeyID,
+		SecretAccessKey: cfg.StorageSecretKey,
+		Endpoint:        cfg.StorageEndpoint,
+		UseSSL:          cfg.StorageUseSSL,
+		BaseURL:         cfg.StorageBaseURL,
+	}
+
+	// Create storage factory
+	factory := storage.NewFactory(logger)
+
+	// Create and return storage service
+	return factory.CreateStorage(storageConfig)
 }

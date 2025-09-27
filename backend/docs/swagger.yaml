@@ -118,6 +118,13 @@ definitions:
     - name
     - password
     type: object
+  domain.EmailVerificationRequest:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
   domain.EventListResponse:
     properties:
       events:
@@ -174,6 +181,13 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  domain.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
     type: object
   domain.LoginRequest:
     properties:
@@ -356,6 +370,24 @@ definitions:
     required:
     - refresh_token
     type: object
+  domain.ResendVerificationRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  domain.ResetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
   domain.RespondToMatchRequestRequest:
     properties:
       action:
@@ -455,6 +487,8 @@ definitions:
         type: string
       is_active:
         type: boolean
+      is_email_verified:
+        type: boolean
       name:
         type: string
       partner_id:
@@ -542,6 +576,32 @@ info:
   title: EraLove API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send password reset email to user
+      parameters:
+      - description: Forgot password data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:
@@ -658,6 +718,88 @@ paths:
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Resend email verification link to user
+      parameters:
+      - description: Resend verification data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResendVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Resend verification email
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password using reset token
+      parameters:
+      - description: Reset password data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verify user's email address using verification token
+      parameters:
+      - description: Email verification data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.EmailVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Verify email address
       tags:
       - auth
   /events:
