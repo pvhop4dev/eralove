@@ -1,0 +1,1427 @@
+basePath: /api/v1
+definitions:
+  domain.Conversation:
+    properties:
+      last_message:
+        $ref: '#/definitions/domain.Message'
+      partner_avatar:
+        type: string
+      partner_id:
+        type: string
+      partner_name:
+        type: string
+      unread_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  domain.ConversationListResponse:
+    properties:
+      conversations:
+        items:
+          $ref: '#/definitions/domain.Conversation'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.CreateEventRequest:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      event_type:
+        enum:
+        - anniversary
+        - date
+        - milestone
+        - celebration
+        - other
+        type: string
+      is_private:
+        type: boolean
+      is_recurring:
+        type: boolean
+      location:
+        type: string
+      recurrence_rule:
+        type: string
+      reminder:
+        $ref: '#/definitions/domain.EventReminder'
+      time:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - date
+    - event_type
+    - title
+    type: object
+  domain.CreateMatchRequestRequest:
+    properties:
+      anniversary_date:
+        type: string
+      message:
+        type: string
+      receiver_email:
+        type: string
+    required:
+    - anniversary_date
+    - receiver_email
+    type: object
+  domain.CreateMessageRequest:
+    properties:
+      content:
+        maxLength: 1000
+        minLength: 1
+        type: string
+      message_type:
+        enum:
+        - text
+        - image
+        type: string
+      receiver_id:
+        type: string
+    required:
+    - content
+    - receiver_id
+    type: object
+  domain.CreateUserRequest:
+    properties:
+      avatar:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - other
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  domain.EventListResponse:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/domain.EventResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.EventReminder:
+    properties:
+      enabled:
+        type: boolean
+      is_notified:
+        type: boolean
+      message:
+        type: string
+      reminder_at:
+        type: string
+    type: object
+  domain.EventResponse:
+    properties:
+      created_at:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      event_type:
+        type: string
+      id:
+        type: string
+      is_private:
+        type: boolean
+      is_recurring:
+        type: boolean
+      location:
+        type: string
+      partner_id:
+        type: string
+      recurrence_rule:
+        type: string
+      reminder:
+        $ref: '#/definitions/domain.EventReminder'
+      time:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  domain.MarkAsReadRequest:
+    properties:
+      partner_id:
+        type: string
+    required:
+    - partner_id
+    type: object
+  domain.MatchRequestListResponse:
+    properties:
+      limit:
+        type: integer
+      match_requests:
+        items:
+          $ref: '#/definitions/domain.MatchRequestResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.MatchRequestResponse:
+    properties:
+      anniversary_date:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      receiver_email:
+        type: string
+      receiver_id:
+        type: string
+      responded_at:
+        type: string
+      sender_email:
+        type: string
+      sender_id:
+        type: string
+      sender_name:
+        type: string
+      status:
+        $ref: '#/definitions/domain.MatchRequestStatus'
+      updated_at:
+        type: string
+    type: object
+  domain.MatchRequestStatus:
+    enum:
+    - pending
+    - accepted
+    - declined
+    - ignored
+    type: string
+    x-enum-varnames:
+    - MatchRequestStatusPending
+    - MatchRequestStatusAccepted
+    - MatchRequestStatusDeclined
+    - MatchRequestStatusIgnored
+  domain.Message:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_deleted:
+        type: boolean
+      is_read:
+        type: boolean
+      message_type:
+        description: text, image, etc.
+        type: string
+      read_at:
+        type: string
+      receiver_id:
+        type: string
+      sender_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.MessageListResponse:
+    properties:
+      limit:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/domain.MessageResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.MessageResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_read:
+        type: boolean
+      message_type:
+        type: string
+      read_at:
+        type: string
+      receiver_id:
+        type: string
+      sender_id:
+        type: string
+    type: object
+  domain.PhotoListResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      photos:
+        items:
+          $ref: '#/definitions/domain.PhotoResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  domain.PhotoResponse:
+    properties:
+      created_at:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      is_private:
+        type: boolean
+      location:
+        type: string
+      partner_id:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  domain.RespondToMatchRequestRequest:
+    properties:
+      action:
+        enum:
+        - accept
+        - reject
+        type: string
+    required:
+    - action
+    type: object
+  domain.UpdateEventRequest:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      event_type:
+        enum:
+        - anniversary
+        - date
+        - milestone
+        - celebration
+        - other
+        type: string
+      is_private:
+        type: boolean
+      is_recurring:
+        type: boolean
+      location:
+        type: string
+      recurrence_rule:
+        type: string
+      reminder:
+        $ref: '#/definitions/domain.EventReminder'
+      time:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    type: object
+  domain.UpdatePhotoRequest:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      is_private:
+        type: boolean
+      location:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    type: object
+  domain.UpdateUserRequest:
+    properties:
+      avatar:
+        type: string
+      date_of_birth:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - other
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      partner_name:
+        type: string
+    type: object
+  domain.UserResponse:
+    properties:
+      anniversary_date:
+        type: string
+      avatar:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      partner_id:
+        type: string
+      partner_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    description: Error response structure
+    properties:
+      details:
+        description: Additional error details (optional)
+        example:
+        - name is required
+        - email is required
+        items:
+          type: string
+        type: array
+      error:
+        description: Error code or type
+        example: validation_failed
+        type: string
+      message:
+        description: Human-readable error message
+        example: The provided data is invalid
+        type: string
+    type: object
+  handler.LoginResponse:
+    description: Login response with user data and authentication tokens
+    properties:
+      access_token:
+        description: JWT access token
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        description: Token expiration time in seconds
+        example: 3600
+        type: integer
+      message:
+        description: Success message
+        example: Login successful
+        type: string
+      refresh_token:
+        description: JWT refresh token
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      token_type:
+        description: Token type
+        example: Bearer
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/domain.UserResponse'
+        description: User information
+    type: object
+  handler.SuccessResponse:
+    description: Success response structure
+    properties:
+      data:
+        description: Response data (optional)
+      message:
+        description: Success message
+        example: Operation completed successfully
+        type: string
+      success:
+        description: Success status
+        example: true
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@eralove.com
+    name: EraLove API Support
+    url: https://eralove.com/support
+  description: EraLove is a couple's love journey tracking application. This API provides
+    endpoints for user authentication, photo management, event tracking, private messaging,
+    and match requests between couples.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://eralove.com/terms
+  title: EraLove API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and revoke refresh token
+      parameters:
+      - description: Logout data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token using refresh token
+      parameters:
+      - description: Refresh token data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /events:
+    get:
+      description: Get events for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Partner ID to filter shared events
+        in: query
+        name: partner_id
+        type: string
+      - description: Filter by year
+        in: query
+        name: year
+        type: integer
+      - description: Filter by month
+        in: query
+        name: month
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EventListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user events
+      tags:
+      - events
+    post:
+      consumes:
+      - application/json
+      description: Create a new event/milestone
+      parameters:
+      - description: Event creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.EventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new event
+      tags:
+      - events
+  /events/{id}:
+    delete:
+      description: Delete an event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete event
+      tags:
+      - events
+    get:
+      description: Get a specific event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EventResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get event by ID
+      tags:
+      - events
+    put:
+      consumes:
+      - application/json
+      description: Update event information
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Event update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.EventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update event
+      tags:
+      - events
+  /match-requests:
+    post:
+      consumes:
+      - application/json
+      description: Send a match request to another user by email
+      parameters:
+      - description: Match request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateMatchRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.MatchRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a match request
+      tags:
+      - match-requests
+  /match-requests/{id}:
+    delete:
+      description: Cancel a pending match request
+      parameters:
+      - description: Match Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel match request
+      tags:
+      - match-requests
+    get:
+      description: Get a specific match request by its ID
+      parameters:
+      - description: Match Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MatchRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get match request by ID
+      tags:
+      - match-requests
+  /match-requests/{id}/respond:
+    post:
+      consumes:
+      - application/json
+      description: Accept or reject a match request
+      parameters:
+      - description: Match Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Response data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RespondToMatchRequestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MatchRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Respond to match request
+      tags:
+      - match-requests
+  /match-requests/received:
+    get:
+      description: Get match requests received by the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status (pending, accepted, rejected)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MatchRequestListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get received match requests
+      tags:
+      - match-requests
+  /match-requests/sent:
+    get:
+      description: Get match requests sent by the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status (pending, accepted, rejected)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MatchRequestListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get sent match requests
+      tags:
+      - match-requests
+  /messages:
+    get:
+      description: Get messages between user and partner
+      parameters:
+      - description: Partner ID
+        in: query
+        name: partner_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MessageListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get conversation messages
+      tags:
+      - messages
+    post:
+      consumes:
+      - application/json
+      description: Send a message to partner
+      parameters:
+      - description: Message data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a message
+      tags:
+      - messages
+  /messages/{id}:
+    delete:
+      description: Delete a message (soft delete)
+      parameters:
+      - description: Message ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete message
+      tags:
+      - messages
+  /messages/conversations:
+    get:
+      description: Get all conversations for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConversationListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user conversations
+      tags:
+      - messages
+  /messages/mark-read:
+    post:
+      consumes:
+      - application/json
+      description: Mark messages in a conversation as read
+      parameters:
+      - description: Mark as read data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.MarkAsReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark messages as read
+      tags:
+      - messages
+  /photos:
+    get:
+      description: Get photos for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Partner ID to filter shared photos
+        in: query
+        name: partner_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user photos
+      tags:
+      - photos
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload and create a new photo
+      parameters:
+      - description: Photo file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Photo title
+        in: formData
+        name: title
+        type: string
+      - description: Photo description
+        in: formData
+        name: description
+        type: string
+      - description: Photo tags (comma separated)
+        in: formData
+        name: tags
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.PhotoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new photo
+      tags:
+      - photos
+  /photos/{id}:
+    delete:
+      description: Delete a photo
+      parameters:
+      - description: Photo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete photo
+      tags:
+      - photos
+    get:
+      description: Get a specific photo by its ID
+      parameters:
+      - description: Photo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get photo by ID
+      tags:
+      - photos
+    put:
+      consumes:
+      - application/json
+      description: Update photo information
+      parameters:
+      - description: Photo ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Photo update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePhotoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.PhotoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update photo
+      tags:
+      - photos
+  /users/account:
+    delete:
+      description: Soft delete current user's account
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user account
+      tags:
+      - users
+  /users/profile:
+    get:
+      description: Get current user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update current user's profile information
+      parameters:
+      - description: Profile update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
