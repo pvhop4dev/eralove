@@ -33,7 +33,31 @@ func ProvideValidator() *validator.Validate {
 
 // ProvideI18n provides an i18n service
 func ProvideI18n(logger *zap.Logger) *i18n.I18n {
-	return i18n.NewI18n(logger)
+	i18nService := i18n.NewI18n(logger)
+	
+	// Load translation messages from messages directory
+	// Try multiple paths to handle different working directories
+	paths := []string{
+		"./messages",
+		"../messages",
+		"./backend/messages",
+		"messages",
+	}
+	
+	var loaded bool
+	for _, path := range paths {
+		if err := i18nService.LoadMessages(path); err == nil {
+			logger.Info("Translation messages loaded successfully", zap.String("path", path))
+			loaded = true
+			break
+		}
+	}
+	
+	if !loaded {
+		logger.Warn("Failed to load i18n messages from any path")
+	}
+	
+	return i18nService
 }
 
 // ProvidePasswordManager provides a password manager

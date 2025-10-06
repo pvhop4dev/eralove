@@ -1,0 +1,43 @@
+{
+  "name": "eralove-api-tests",
+  "version": "1.0.0",
+  "description": "Automated API testing for EraLove using Newman (Postman CLI)",
+  "main": "newman-test-script.js",
+  "scripts": {
+    "test": "node newman-test-script.js dev",
+    "test:dev": "node newman-test-script.js dev",
+    "test:prod": "node newman-test-script.js prod",
+    "test:watch": "nodemon --watch ../internal --exec 'npm run test:dev'",
+    "install-newman": "npm install -g newman",
+    "setup": "npm install && npm run install-newman",
+    "clean": "rm -rf test-results/*",
+    "report": "open test-results/*.html || start test-results/*.html"
+  },
+  "keywords": [
+    "api-testing",
+    "postman",
+    "newman",
+    "eralove",
+    "automation"
+  ],
+  "author": "EraLove Team",
+  "license": "MIT",
+  "dependencies": {
+    "newman": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eralove/eralove-backend"
+  },
+  "bugs": {
+    "url": "https://github.com/eralove/eralove-backend/issues"
+  },
+  "homepage": "https://github.com/eralove/eralove-backend#readme"
+}

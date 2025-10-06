@@ -66,7 +66,9 @@ func (h *MatchRequestHandler) SendMatchRequest(c *fiber.Ctx) error {
 
 	matchRequest, err := h.matchRequestService.SendMatchRequest(c.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to send match request", zap.Error(err))
+		h.logger.Error("Failed to send match request",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to send match request",
 			Message: err.Error(),
@@ -98,7 +100,9 @@ func (h *MatchRequestHandler) GetSentRequests(c *fiber.Ctx) error {
 
 	requests, total, err := h.matchRequestService.GetSentRequests(c.Context(), userID, status, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get sent requests", zap.Error(err))
+		h.logger.Error("Failed to get sent requests",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get sent requests",
 			Message: err.Error(),
@@ -135,7 +139,9 @@ func (h *MatchRequestHandler) GetReceivedRequests(c *fiber.Ctx) error {
 
 	requests, total, err := h.matchRequestService.GetReceivedRequests(c.Context(), userID, status, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get received requests", zap.Error(err))
+		h.logger.Error("Failed to get received requests",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get received requests",
 			Message: err.Error(),
@@ -190,7 +196,9 @@ func (h *MatchRequestHandler) RespondToMatchRequest(c *fiber.Ctx) error {
 
 	matchRequest, err := h.matchRequestService.RespondToMatchRequest(c.Context(), requestID, userID, req.Action)
 	if err != nil {
-		h.logger.Error("Failed to respond to match request", zap.Error(err))
+		h.logger.Error("Failed to respond to match request",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to respond to match request",
 			Message: err.Error(),
@@ -223,7 +231,9 @@ func (h *MatchRequestHandler) GetMatchRequest(c *fiber.Ctx) error {
 
 	matchRequest, err := h.matchRequestService.GetMatchRequest(c.Context(), requestID, userID)
 	if err != nil {
-		h.logger.Error("Failed to get match request", zap.Error(err))
+		h.logger.Error("Failed to get match request",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
 			Error:   "Match request not found",
 			Message: err.Error(),
@@ -256,7 +266,9 @@ func (h *MatchRequestHandler) CancelMatchRequest(c *fiber.Ctx) error {
 
 	err = h.matchRequestService.CancelMatchRequest(c.Context(), requestID, userID)
 	if err != nil {
-		h.logger.Error("Failed to cancel match request", zap.Error(err))
+		h.logger.Error("Failed to cancel match request",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to cancel match request",
 			Message: err.Error(),

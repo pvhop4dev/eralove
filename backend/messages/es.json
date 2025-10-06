@@ -1,82 +1,41 @@
-[
-  {
-    "id": "invalid_request",
-    "message": "Cuerpo de solicitud inválido"
-  },
-  {
-    "id": "validation_failed",
-    "message": "Validación fallida"
-  },
-  {
-    "id": "user_created",
-    "message": "Usuario creado exitosamente"
-  },
-  {
-    "id": "login_successful",
-    "message": "Inicio de sesión exitoso"
-  },
-  {
-    "id": "logout_successful",
-    "message": "Cierre de sesión exitoso"
-  },
-  {
-    "id": "email_verified",
-    "message": "Email verificado exitosamente"
-  },
-  {
-    "id": "verification_email_sent",
-    "message": "Email de verificación enviado exitosamente"
-  },
-  {
-    "id": "password_reset_email_sent",
-    "message": "Email de restablecimiento de contraseña enviado exitosamente"
-  },
-  {
-    "id": "password_reset_successful",
-    "message": "Restablecimiento de contraseña exitoso"
-  },
-  {
-    "id": "profile_updated",
-    "message": "Perfil actualizado exitosamente"
-  },
-  {
-    "id": "account_deleted",
-    "message": "Cuenta eliminada exitosamente"
-  },
-  {
-    "id": "unauthorized",
-    "message": "Acceso no autorizado"
-  },
-  {
-    "id": "forbidden",
-    "message": "Acceso prohibido"
-  },
-  {
-    "id": "not_found",
-    "message": "Recurso no encontrado"
-  },
-  {
-    "id": "internal_error",
-    "message": "Error interno del servidor"
-  },
-  {
-    "id": "invalid_credentials",
-    "message": "Email o contraseña inválidos"
-  },
-  {
-    "id": "user_already_exists",
-    "message": "Ya existe un usuario con este email"
-  },
-  {
-    "id": "email_not_verified",
-    "message": "Por favor verifica tu dirección de email primero"
-  },
-  {
-    "id": "invalid_token",
-    "message": "Token inválido o expirado"
-  },
-  {
-    "id": "token_expired",
-    "message": "El token ha expirado"
-  }
-]
+{
+  "invalid_request": "Cuerpo de solicitud inválido",
+  "validation_failed": "Validación fallida",
+  "user_created": "Usuario creado exitosamente",
+  "registration_success": "¡Registro exitoso! Por favor verifica tu email.",
+  "login_successful": "Inicio de sesión exitoso",
+  "logout_successful": "Cierre de sesión exitoso",
+  "email_verified": "Email verificado exitosamente",
+  "verification_email_sent": "Email de verificación enviado exitosamente",
+  "password_reset_email_sent": "Email de restablecimiento de contraseña enviado exitosamente",
+  "password_reset_successful": "Restablecimiento de contraseña exitoso",
+  "profile_updated": "Perfil actualizado exitosamente",
+  "account_deleted": "Cuenta eliminada exitosamente",
+  "unauthorized": "Acceso no autorizado",
+  "forbidden": "Acceso prohibido",
+  "not_found": "Recurso no encontrado",
+  "internal_error": "Error interno del servidor",
+  "invalid_credentials": "Email o contraseña inválidos",
+  "user_already_exists": "Ya existe un usuario con este email",
+  "email_not_verified": "Por favor verifica tu dirección de email primero",
+  "invalid_token": "Token inválido o expirado",
+  "token_expired": "El token ha expirado",
+  "registration_failed": "Registro fallido",
+  "login_failed": "Inicio de sesión fallido",
+  "logout_failed": "Error al cerrar sesión",
+  "profile_update_failed": "Error al actualizar el perfil",
+  "account_deletion_failed": "Error al eliminar la cuenta",
+  "email_verification_failed": "Verificación de email fallida",
+  "verification_email_failed": "Error al enviar email de verificación",
+  "password_reset_failed": "Error al enviar email de restablecimiento de contraseña",
+  "invalid_verification_token": "Token de verificación inválido o expirado",
+  "invalid_reset_token": "Token de restablecimiento inválido o expirado",
+  "user_not_found": "Usuario no encontrado",
+  "email_already_verified": "El email ya está verificado",
+  "weak_password": "La contraseña es muy débil. Debe tener al menos 8 caracteres con mayúsculas, minúsculas y números",
+  "password_mismatch": "Las contraseñas no coinciden",
+  "invalid_email": "Dirección de email inválida",
+  "required_field": "Este campo es obligatorio",
+  "operation_successful": "Operación completada exitosamente",
+  "operation_failed": "Operación fallida"
+}

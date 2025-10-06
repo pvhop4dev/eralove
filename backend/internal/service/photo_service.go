@@ -120,6 +120,53 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 	return photo.ToResponse(), nil
 }
 
+// CreatePhotoWithPath creates a new photo using a pre-uploaded file path
+func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive.ObjectID, req *domain.CreatePhotoRequest) (*domain.PhotoResponse, error) {
+	// Get user to check if they have a partner
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// Use the provided file path to construct the image URL
+	imageURL := req.FilePath
+	if req.ImageURL != "" {
+		imageURL = req.ImageURL
+	}
+
+	// Set default date if not provided
+	photoDate := req.Date
+	if photoDate.IsZero() {
+		photoDate = time.Now()
+	}
+
+	// Create photo
+	photo := &domain.Photo{
+		UserID:      userID,
+		PartnerID:   user.PartnerID,
+		Title:       req.Title,
+		Description: req.Description,
+		ImageURL:    imageURL,
+		Date:        photoDate,
+		Location:    req.Location,
+		Tags:        req.Tags,
+		IsPrivate:   req.IsPrivate,
+	}
+
+	if err := s.photoRepo.Create(ctx, photo); err != nil {
+		s.logger.Error("Failed to create photo", zap.Error(err))
+		return nil, fmt.Errorf("failed to create photo")
+	}
+
+	s.logger.Info("Photo created successfully with path",
+		zap.String("photo_id", photo.ID.Hex()),
+		zap.String("user_id", userID.Hex()),
+		zap.String("file_path", req.FilePath),
+		zap.String("image_url", imageURL))
+
+	return photo.ToResponse(), nil
+}
+
 // GetPhoto retrieves a photo by ID
 func (s *PhotoService) GetPhoto(ctx context.Context, photoID, userID primitive.ObjectID) (*domain.PhotoResponse, error) {
 	photo, err := s.photoRepo.GetByID(ctx, photoID)

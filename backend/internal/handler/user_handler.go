@@ -58,17 +58,19 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		LogParsingError(h.logger, err, c, "Registration")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
+			Code:    int(domain.ErrCodeInvalidRequest),
 			Error:   "Invalid request body",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
+			TraceID: getTraceID(c),
 		})
 	}
 
-	LogRequestParsed(h.logger, "Registration", 
+	LogRequestParsed(h.logger, c, "Registration",
 		zap.String("email", req.Email),
 		zap.String("name", req.Name))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Registration", 
+		LogValidationError(h.logger, c, err, "Registration",
 			zap.String("email", req.Email),
 			zap.Any("validation_errors", getValidationErrors(err)))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -78,45 +80,55 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Registration", zap.String("email", req.Email))
-	
+	LogServiceCall(h.logger, c, "Registration", zap.String("email", req.Email))
+
 	user, err := h.userService.Register(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Registration", zap.String("email", req.Email))
+		LogServiceError(h.logger, c, err, "Registration", zap.String("email", req.Email))
 
 		// Check for specific error types
 		if strings.Contains(err.Error(), "already exists") {
 			h.logger.Warn("Registration failed: email already exists",
+				zap.String("trace_id", getTraceID(c)),
 				zap.String("email", req.Email))
 			return c.Status(fiber.StatusConflict).JSON(ErrorResponse{
+				Code:    int(domain.ErrCodeUserAlreadyExists),
 				Error:   "Email already exists",
 				Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "user_already_exists", nil),
+				TraceID: getTraceID(c),
 			})
 		}
 
 		if strings.Contains(err.Error(), "invalid password") {
 			h.logger.Warn("Registration failed: invalid password",
+				zap.String("trace_id", getTraceID(c)),
 				zap.String("email", req.Email))
 			return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
+				Code:    int(domain.ErrCodeWeakPassword),
 				Error:   "Invalid password",
 				Message: err.Error(),
+				TraceID: getTraceID(c),
 			})
 		}
 
 		// Generic server error
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Code:    int(domain.ErrCodeInternalError),
 			Error:   "Registration failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
+			TraceID: getTraceID(c),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Registration", 
+	LogServiceSuccess(h.logger, c, "Registration",
 		zap.String("email", req.Email),
 		zap.String("user_id", user.ID.Hex()))
 
 	return c.Status(fiber.StatusCreated).JSON(SuccessResponse{
+		Success: true,
 		Data:    user,
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "registration_success", nil),
+		TraceID: getTraceID(c),
 	})
 }
 
@@ -143,10 +155,10 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Login", zap.String("email", req.Email))
+	LogRequestParsed(h.logger, c, "Login", zap.String("email", req.Email))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Login", 
+		LogValidationError(h.logger, c, err, "Login",
 			zap.String("email", req.Email),
 			zap.Any("validation_errors", getValidationErrors(err)))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -156,18 +168,18 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Login", zap.String("email", req.Email))
+	LogServiceCall(h.logger, c, "Login", zap.String("email", req.Email))
 
 	user, token, err := h.userService.Login(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Login", zap.String("email", req.Email))
+		LogServiceError(h.logger, c, err, "Login", zap.String("email", req.Email))
 		return c.Status(fiber.StatusUnauthorized).JSON(ErrorResponse{
 			Error:   "Invalid credentials",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_credentials", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Login", 
+	LogServiceSuccess(h.logger, c, "Login",
 		zap.String("email", req.Email),
 		zap.String("user_id", user.ID.Hex()))
 
@@ -193,20 +205,20 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 // @Router /users/profile [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	LogRequestStart(h.logger, c, "Get profile")
-	
+
 	userID := getUserIDFromContext(c)
-	LogServiceCall(h.logger, "Get profile", zap.String("user_id", userID.Hex()))
+	LogServiceCall(h.logger, c, "Get profile", zap.String("user_id", userID.Hex()))
 
 	user, err := h.userService.GetProfile(c.Context(), userID)
 	if err != nil {
-		LogServiceError(h.logger, err, "Get profile", zap.String("user_id", userID.Hex()))
+		LogServiceError(h.logger, c, err, "Get profile", zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
 			Error:   "User not found",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "not_found", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Get profile", zap.String("user_id", userID.Hex()))
+	LogServiceSuccess(h.logger, c, "Get profile", zap.String("user_id", userID.Hex()))
 
 	return c.JSON(SuccessResponse{
 		Data:    user,
@@ -228,7 +240,7 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Router /users/profile [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	LogRequestStart(h.logger, c, "Update profile")
-	
+
 	userID := getUserIDFromContext(c)
 
 	var req domain.UpdateUserRequest
@@ -240,12 +252,12 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Update profile", 
+	LogRequestParsed(h.logger, c, "Update profile",
 		zap.String("user_id", userID.Hex()),
 		zap.String("name", req.Name))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Update profile", 
+		LogValidationError(h.logger, c, err, "Update profile",
 			zap.String("user_id", userID.Hex()),
 			zap.Any("validation_errors", getValidationErrors(err)))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -255,18 +267,18 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Update profile", zap.String("user_id", userID.Hex()))
+	LogServiceCall(h.logger, c, "Update profile", zap.String("user_id", userID.Hex()))
 
 	user, err := h.userService.UpdateProfile(c.Context(), userID, &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Update profile", zap.String("user_id", userID.Hex()))
+		LogServiceError(h.logger, c, err, "Update profile", zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to update profile",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Update profile", zap.String("user_id", userID.Hex()))
+	LogServiceSuccess(h.logger, c, "Update profile", zap.String("user_id", userID.Hex()))
 
 	return c.JSON(SuccessResponse{
 		Data:    user,
@@ -285,19 +297,19 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Router /users/account [delete]
 func (h *UserHandler) DeleteAccount(c *fiber.Ctx) error {
 	LogRequestStart(h.logger, c, "Delete account")
-	
+
 	userID := getUserIDFromContext(c)
-	LogServiceCall(h.logger, "Delete account", zap.String("user_id", userID.Hex()))
+	LogServiceCall(h.logger, c, "Delete account", zap.String("user_id", userID.Hex()))
 
 	if err := h.userService.DeleteAccount(c.Context(), userID); err != nil {
-		LogServiceError(h.logger, err, "Delete account", zap.String("user_id", userID.Hex()))
+		LogServiceError(h.logger, c, err, "Delete account", zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to delete account",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Delete account", zap.String("user_id", userID.Hex()))
+	LogServiceSuccess(h.logger, c, "Delete account", zap.String("user_id", userID.Hex()))
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "account_deleted", nil),
@@ -349,29 +361,29 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Refresh token", 
+	LogRequestParsed(h.logger, c, "Refresh token",
 		zap.String("token_prefix", SafeTokenLog(req.RefreshToken)))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Refresh token")
+		LogValidationError(h.logger, c, err, "Refresh token")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
 
-	LogServiceCall(h.logger, "Refresh token")
+	LogServiceCall(h.logger, c, "Refresh token")
 
 	tokenPair, user, err := h.userService.RefreshToken(c.Context(), req.RefreshToken)
 	if err != nil {
-		LogServiceError(h.logger, err, "Refresh token")
+		LogServiceError(h.logger, c, err, "Refresh token")
 		return c.Status(fiber.StatusUnauthorized).JSON(ErrorResponse{
 			Error:   "Invalid refresh token",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_token", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Refresh token", zap.String("user_id", user.ID.Hex()))
+	LogServiceSuccess(h.logger, c, "Refresh token", zap.String("user_id", user.ID.Hex()))
 
 	return c.JSON(LoginResponse{
 		User:         user,
@@ -406,29 +418,29 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Logout", 
+	LogRequestParsed(h.logger, c, "Logout",
 		zap.String("token_prefix", SafeTokenLog(req.RefreshToken)))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Logout")
+		LogValidationError(h.logger, c, err, "Logout")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
 
-	LogServiceCall(h.logger, "Logout")
+	LogServiceCall(h.logger, c, "Logout")
 
 	err := h.userService.Logout(c.Context(), req.RefreshToken)
 	if err != nil {
-		LogServiceError(h.logger, err, "Logout")
+		LogServiceError(h.logger, c, err, "Logout")
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to logout",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Logout")
+	LogServiceSuccess(h.logger, c, "Logout")
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "logout_successful", nil),
@@ -458,29 +470,29 @@ func (h *UserHandler) VerifyEmail(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Email verification", 
+	LogRequestParsed(h.logger, c, "Email verification",
 		zap.String("token_prefix", SafeTokenLog(req.Token)))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Email verification")
+		LogValidationError(h.logger, c, err, "Email verification")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
 
-	LogServiceCall(h.logger, "Email verification")
+	LogServiceCall(h.logger, c, "Email verification")
 
 	err := h.userService.VerifyEmail(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Email verification")
+		LogServiceError(h.logger, c, err, "Email verification")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Email verification failed",
 			Message: err.Error(),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Email verification")
+	LogServiceSuccess(h.logger, c, "Email verification")
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "email_verified", nil),
@@ -509,11 +521,11 @@ func (h *UserHandler) ResendVerificationEmail(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Resend verification email", 
+	LogRequestParsed(h.logger, c, "Resend verification email",
 		zap.String("email", req.Email))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Resend verification email", 
+		LogValidationError(h.logger, c, err, "Resend verification email",
 			zap.String("email", req.Email))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
@@ -521,18 +533,18 @@ func (h *UserHandler) ResendVerificationEmail(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Resend verification email", zap.String("email", req.Email))
+	LogServiceCall(h.logger, c, "Resend verification email", zap.String("email", req.Email))
 
 	err := h.userService.ResendVerificationEmail(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Resend verification email", zap.String("email", req.Email))
+		LogServiceError(h.logger, c, err, "Resend verification email", zap.String("email", req.Email))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Failed to resend verification email",
 			Message: err.Error(),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Resend verification email", zap.String("email", req.Email))
+	LogServiceSuccess(h.logger, c, "Resend verification email", zap.String("email", req.Email))
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "verification_email_sent", nil),
@@ -561,11 +573,11 @@ func (h *UserHandler) ForgotPassword(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Forgot password", 
+	LogRequestParsed(h.logger, c, "Forgot password",
 		zap.String("email", req.Email))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Forgot password", 
+		LogValidationError(h.logger, c, err, "Forgot password",
 			zap.String("email", req.Email))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
@@ -573,18 +585,18 @@ func (h *UserHandler) ForgotPassword(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Forgot password", zap.String("email", req.Email))
+	LogServiceCall(h.logger, c, "Forgot password", zap.String("email", req.Email))
 
 	err := h.userService.ForgotPassword(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Forgot password", zap.String("email", req.Email))
+		LogServiceError(h.logger, c, err, "Forgot password", zap.String("email", req.Email))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to process request",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "internal_error", nil),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Forgot password", zap.String("email", req.Email))
+	LogServiceSuccess(h.logger, c, "Forgot password", zap.String("email", req.Email))
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "password_reset_email_sent", nil),
@@ -613,29 +625,29 @@ func (h *UserHandler) ResetPassword(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Reset password", 
+	LogRequestParsed(h.logger, c, "Reset password",
 		zap.String("token_prefix", SafeTokenLog(req.Token)))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Reset password")
+		LogValidationError(h.logger, c, err, "Reset password")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
 		})
 	}
 
-	LogServiceCall(h.logger, "Reset password")
+	LogServiceCall(h.logger, c, "Reset password")
 
 	err := h.userService.ResetPassword(c.Context(), &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Reset password")
+		LogServiceError(h.logger, c, err, "Reset password")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Password reset failed",
 			Message: err.Error(),
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Reset password")
+	LogServiceSuccess(h.logger, c, "Reset password")
 
 	return c.JSON(SuccessResponse{
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "password_reset_successful", nil),

@@ -1,82 +1,41 @@
-[
-  {
-    "id": "invalid_request",
-    "message": "Corps de requête invalide"
-  },
-  {
-    "id": "validation_failed",
-    "message": "Validation échouée"
-  },
-  {
-    "id": "user_created",
-    "message": "Utilisateur créé avec succès"
-  },
-  {
-    "id": "login_successful",
-    "message": "Connexion réussie"
-  },
-  {
-    "id": "logout_successful",
-    "message": "Déconnexion réussie"
-  },
-  {
-    "id": "email_verified",
-    "message": "Email vérifié avec succès"
-  },
-  {
-    "id": "verification_email_sent",
-    "message": "Email de vérification envoyé avec succès"
-  },
-  {
-    "id": "password_reset_email_sent",
-    "message": "Email de réinitialisation du mot de passe envoyé avec succès"
-  },
-  {
-    "id": "password_reset_successful",
-    "message": "Réinitialisation du mot de passe réussie"
-  },
-  {
-    "id": "profile_updated",
-    "message": "Profil mis à jour avec succès"
-  },
-  {
-    "id": "account_deleted",
-    "message": "Compte supprimé avec succès"
-  },
-  {
-    "id": "unauthorized",
-    "message": "Accès non autorisé"
-  },
-  {
-    "id": "forbidden",
-    "message": "Accès interdit"
-  },
-  {
-    "id": "not_found",
-    "message": "Ressource non trouvée"
-  },
-  {
-    "id": "internal_error",
-    "message": "Erreur interne du serveur"
-  },
-  {
-    "id": "invalid_credentials",
-    "message": "Email ou mot de passe invalide"
-  },
-  {
-    "id": "user_already_exists",
-    "message": "Un utilisateur avec cet email existe déjà"
-  },
-  {
-    "id": "email_not_verified",
-    "message": "Veuillez d'abord vérifier votre adresse email"
-  },
-  {
-    "id": "invalid_token",
-    "message": "Token invalide ou expiré"
-  },
-  {
-    "id": "token_expired",
-    "message": "Le token a expiré"
-  }
-]
+{
+  "invalid_request": "Corps de requête invalide",
+  "validation_failed": "Validation échouée",
+  "user_created": "Utilisateur créé avec succès",
+  "registration_success": "Inscription réussie! Veuillez vérifier votre email.",
+  "login_successful": "Connexion réussie",
+  "logout_successful": "Déconnexion réussie",
+  "email_verified": "Email vérifié avec succès",
+  "verification_email_sent": "Email de vérification envoyé avec succès",
+  "password_reset_email_sent": "Email de réinitialisation du mot de passe envoyé avec succès",
+  "password_reset_successful": "Réinitialisation du mot de passe réussie",
+  "profile_updated": "Profil mis à jour avec succès",
+  "account_deleted": "Compte supprimé avec succès",
+  "unauthorized": "Accès non autorisé",
+  "forbidden": "Accès interdit",
+  "not_found": "Ressource non trouvée",
+  "internal_error": "Erreur interne du serveur",
+  "invalid_credentials": "Email ou mot de passe invalide",
+  "user_already_exists": "Un utilisateur avec cet email existe déjà",
+  "email_not_verified": "Veuillez d'abord vérifier votre adresse email",
+  "invalid_token": "Token invalide ou expiré",
+  "token_expired": "Le token a expiré",
+  "registration_failed": "Échec de l'inscription",
+  "login_failed": "Échec de la connexion",
+  "logout_failed": "Échec de la déconnexion",
+  "profile_update_failed": "Échec de la mise à jour du profil",
+  "account_deletion_failed": "Échec de la suppression du compte",
+  "email_verification_failed": "Échec de la vérification de l'email",
+  "verification_email_failed": "Échec de l'envoi de l'email de vérification",
+  "password_reset_failed": "Échec de l'envoi de l'email de réinitialisation du mot de passe",
+  "invalid_verification_token": "Token de vérification invalide ou expiré",
+  "invalid_reset_token": "Token de réinitialisation invalide ou expiré",
+  "user_not_found": "Utilisateur non trouvé",
+  "email_already_verified": "L'email est déjà vérifié",
+  "weak_password": "Le mot de passe est trop faible. Il doit contenir au moins 8 caractères avec majuscules, minuscules et chiffres",
+  "password_mismatch": "Les mots de passe ne correspondent pas",
+  "invalid_email": "Adresse email invalide",
+  "required_field": "Ce champ est obligatoire",
+  "operation_successful": "Opération terminée avec succès",
+  "operation_failed": "Échec de l'opération"
+}

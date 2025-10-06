@@ -167,8 +167,11 @@ func New(cfg *config.Config, logger *zap.Logger) (*App, error) {
 
 // Run starts the application
 func (a *App) Run() error {
-	a.logger.Info("Starting server", zap.String("port", a.config.Port))
-	return a.fiber.Listen(a.config.GetPort())
+	addr := "0.0.0.0" + a.config.GetPort()
+	a.logger.Info("Starting server", 
+		zap.String("address", addr),
+		zap.String("port", a.config.Port))
+	return a.fiber.Listen(addr)
 }
 
 // Shutdown gracefully shuts down the application
@@ -198,12 +201,21 @@ func (a *App) Shutdown(ctx context.Context) error {
 // setupMiddleware configures middleware
 func setupMiddleware(app *fiber.App, cfg *config.Config, logger *zap.Logger) {
 	// Request ID middleware
-	app.Use(requestid.New())
+	app.Use(requestid.New(requestid.Config{
+		Header: "X-Request-ID",
+		ContextKey: "requestid",
+	}))
 
-	// Logger middleware
+	// Logger middleware with trace ID
 	if cfg.IsDevelopment() {
 		app.Use(fiberlogger.New(fiberlogger.Config{
-			Format: "[${time}] ${status} - ${method} ${path} - ${latency}\n",
+			Format: "[${time}] [${locals:requestid}] ${status} - ${method} ${path} - ${latency}\n",
+			TimeFormat: "2006-01-02 15:04:05",
+		}))
+	} else {
+		app.Use(fiberlogger.New(fiberlogger.Config{
+			Format: "[${time}] [${locals:requestid}] ${ip} ${status} - ${method} ${path} - ${latency} ${error}\n",
+			TimeFormat: "2006-01-02T15:04:05Z07:00",
 		}))
 	}
 
@@ -219,9 +231,9 @@ func setupMiddleware(app *fiber.App, cfg *config.Config, logger *zap.Logger) {
 	}
 
 	if cfg.IsDevelopment() {
-		// Allow all origins in development
-		corsConfig.AllowOrigins = "*"
-		corsConfig.AllowCredentials = false // Cannot use credentials with wildcard origin
+		// Allow localhost and 127.0.0.1 in development
+		corsConfig.AllowOrigins = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080"
+		corsConfig.AllowCredentials = true
 	} else {
 		// Use specific origins in production
 		origins := strings.Split(cfg.CORSOrigins, ",")

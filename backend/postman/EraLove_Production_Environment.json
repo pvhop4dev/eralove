@@ -1,0 +1,97 @@
+{
+	"id": "eralove-prod-environment",
+	"name": "EraLove Production",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "https://api.eralove.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_email",
+			"value": "test@eralove.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "test_password",
+			"value": "ProductionPassword123!",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "test_name",
+			"value": "Production Test User",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "partner_email",
+			"value": "partner@eralove.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "partner_password",
+			"value": "ProductionPassword123!",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "partner_name",
+			"value": "Production Partner",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "partner_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "photo_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "event_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "message_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "match_request_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

@@ -30,44 +30,44 @@ type UploadRequest struct {
 
 // DownloadRequest represents a file download request
 type DownloadRequest struct {
-	Key    string        `json:"key"`     // S3 object key
-	Expiry time.Duration `json:"expiry"`  // URL expiry duration
+	Key    string        `json:"key"`    // S3 object key
+	Expiry time.Duration `json:"expiry"` // URL expiry duration
 }
 
 // StorageService defines the interface for file storage operations
 type StorageService interface {
 	// Upload uploads a file to storage
 	Upload(ctx context.Context, req *UploadRequest) (*FileInfo, error)
-	
+
 	// Download generates a presigned URL for downloading
 	Download(ctx context.Context, req *DownloadRequest) (string, error)
-	
+
 	// Delete removes a file from storage
 	Delete(ctx context.Context, key string) error
-	
+
 	// GetFileInfo retrieves file information
 	GetFileInfo(ctx context.Context, key string) (*FileInfo, error)
-	
+
 	// ListFiles lists files in a folder
 	ListFiles(ctx context.Context, folder string, limit int) ([]*FileInfo, error)
-	
+
 	// GeneratePresignedUploadURL generates a presigned URL for direct upload
 	GeneratePresignedUploadURL(ctx context.Context, key string, contentType string, expiry time.Duration) (string, error)
-	
+
 	// GeneratePresignedDownloadURL generates a presigned URL for direct download
 	GeneratePresignedDownloadURL(ctx context.Context, key string, expiry time.Duration) (string, error)
 }
 
 // StorageConfig represents storage configuration
 type StorageConfig struct {
-	Provider        string `json:"provider"`         // aws, gcp, azure, local
-	Region          string `json:"region"`           // AWS region
-	Bucket          string `json:"bucket"`           // S3 bucket name
-	AccessKeyID     string `json:"access_key_id"`    // AWS access key
+	Provider        string `json:"provider"`          // aws, gcp, azure, local
+	Region          string `json:"region"`            // AWS region
+	Bucket          string `json:"bucket"`            // S3 bucket name
+	AccessKeyID     string `json:"access_key_id"`     // AWS access key
 	SecretAccessKey string `json:"secret_access_key"` // AWS secret key
-	Endpoint        string `json:"endpoint"`         // Custom endpoint (for MinIO, etc.)
-	UseSSL          bool   `json:"use_ssl"`          // Use HTTPS
-	BaseURL         string `json:"base_url"`         // Base URL for public access
+	Endpoint        string `json:"endpoint"`          // Custom endpoint (for MinIO, etc.)
+	UseSSL          bool   `json:"use_ssl"`           // Use HTTPS
+	BaseURL         string `json:"base_url"`          // Base URL for public access
 }
 
 // FileType represents supported file types
@@ -100,13 +100,13 @@ func ValidateImageFile(contentType string, size int64) error {
 	if GetFileType(contentType) != FileTypeImage {
 		return ErrUnsupportedFileType
 	}
-	
+
 	// Check file size (max 10MB for images)
 	maxSize := int64(10 * 1024 * 1024) // 10MB
 	if size > maxSize {
 		return ErrFileTooLarge
 	}
-	
+
 	return nil
 }
 

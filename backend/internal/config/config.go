@@ -43,12 +43,13 @@ type Config struct {
 	RateLimitWindow   int `env:"RATE_LIMIT_WINDOW" envDefault:"60"` // seconds
 	
 	// Email Configuration
-	SMTPHost     string `env:"SMTP_HOST" envDefault:"smtp.gmail.com"`
-	SMTPPort     int    `env:"SMTP_PORT" envDefault:"587"`
-	SMTPUsername string `env:"SMTP_USERNAME" envDefault:""`
-	SMTPPassword string `env:"SMTP_PASSWORD" envDefault:""`
-	FromEmail    string `env:"FROM_EMAIL" envDefault:"noreply@eralove.com"`
-	FromName     string `env:"FROM_NAME" envDefault:"EraLove"`
+	SMTPHost           string `env:"SMTP_HOST" envDefault:"smtp.gmail.com"`
+	SMTPPort           int    `env:"SMTP_PORT" envDefault:"587"`
+	SMTPUsername       string `env:"SMTP_USERNAME" envDefault:""`
+	SMTPPassword       string `env:"SMTP_PASSWORD" envDefault:""`
+	FromEmail          string `env:"FROM_EMAIL" envDefault:"noreply@eralove.com"`
+	FromName           string `env:"FROM_NAME" envDefault:"EraLove"`
+	EnableEmailVerify  bool   `env:"ENABLE_EMAIL_VERIFY" envDefault:"false"`
 	
 	// Frontend URL for email links
 	FrontendURL string `env:"FRONTEND_URL" envDefault:"http://localhost:3000"`

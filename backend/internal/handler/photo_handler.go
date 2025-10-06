@@ -37,14 +37,11 @@ func NewPhotoHandler(
 
 // CreatePhoto handles photo creation
 // @Summary Create a new photo
-// @Description Upload and create a new photo
+// @Description Create a new photo with uploaded file path
 // @Tags photos
-// @Accept multipart/form-data
+// @Accept json
 // @Produce json
-// @Param file formData file true "Photo file"
-// @Param title formData string false "Photo title"
-// @Param description formData string false "Photo description"
-// @Param tags formData string false "Photo tags (comma separated)"
+// @Param request body domain.CreatePhotoRequest true "Photo data with file_path"
 // @Security BearerAuth
 // @Success 201 {object} domain.PhotoResponse
 // @Failure 400 {object} ErrorResponse
@@ -55,46 +52,40 @@ func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
 	
 	userID := getUserIDFromContext(c)
 
-	// Handle file upload
-	file, err := c.FormFile("file")
-	if err != nil {
-		LogRequestError(h.logger, c, "File upload failed", err)
+	// Parse JSON request
+	var req domain.CreatePhotoRequest
+	if err := c.BodyParser(&req); err != nil {
+		LogParsingError(h.logger, err, c, "Create photo")
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
-			Error:   "File is required",
+			Error:   "Invalid request body",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "invalid_request", nil),
 		})
 	}
 
-	// Parse form data
-	req := domain.CreatePhotoRequest{
-		Title:       c.FormValue("title"),
-		Description: c.FormValue("description"),
-		Tags:        parseCommaSeparatedTags(c.FormValue("tags")),
-	}
-
-	LogRequestParsed(h.logger, "Create photo", 
+	LogRequestParsed(h.logger, c, "Create photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("title", req.Title),
-		zap.String("filename", file.Filename))
+		zap.String("file_path", req.FilePath))
 
 	// Validate request
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Create photo", 
+		LogValidationError(h.logger, c, err, "Create photo", 
 			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "validation_failed", nil),
+			Details: getValidationErrors(err),
 		})
 	}
 
-	LogServiceCall(h.logger, "Create photo", 
+	LogServiceCall(h.logger, c, "Create photo", 
 		zap.String("user_id", userID.Hex()),
-		zap.String("filename", file.Filename))
+		zap.String("file_path", req.FilePath))
 
 	// Create photo
-	photo, err := h.photoService.CreatePhoto(c.Context(), userID, &req, file)
+	photo, err := h.photoService.CreatePhotoWithPath(c.Context(), userID, &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Create photo", 
+		LogServiceError(h.logger, c, err, "Create photo", 
 			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to create photo",
@@ -102,7 +93,7 @@ func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Create photo", 
+	LogServiceSuccess(h.logger, c, "Create photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photo.ID.Hex()))
 
@@ -138,18 +129,18 @@ func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
 		}
 	}
 
-	LogRequestParsed(h.logger, "Get photos", 
+	LogRequestParsed(h.logger, c, "Get photos", 
 		zap.String("user_id", userID.Hex()),
 		zap.Int("page", page),
 		zap.Int("limit", limit),
 		zap.String("partner_id", partnerIDStr))
 
-	LogServiceCall(h.logger, "Get photos", 
+	LogServiceCall(h.logger, c, "Get photos", 
 		zap.String("user_id", userID.Hex()))
 
 	photos, total, err := h.photoService.GetUserPhotos(c.Context(), userID, partnerID, page, limit)
 	if err != nil {
-		LogServiceError(h.logger, err, "Get photos", 
+		LogServiceError(h.logger, c, err, "Get photos", 
 			zap.String("user_id", userID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get photos",
@@ -157,7 +148,7 @@ func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Get photos", 
+	LogServiceSuccess(h.logger, c, "Get photos", 
 		zap.String("user_id", userID.Hex()),
 		zap.Int64("total", total),
 		zap.Int("count", len(photos)))
@@ -187,7 +178,7 @@ func (h *PhotoHandler) GetPhoto(c *fiber.Ctx) error {
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
-		LogValidationError(h.logger, err, "Get photo", 
+		LogValidationError(h.logger, c, err, "Get photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -196,13 +187,13 @@ func (h *PhotoHandler) GetPhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Get photo", 
+	LogServiceCall(h.logger, c, "Get photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 
 	photo, err := h.photoService.GetPhoto(c.Context(), photoID, userID)
 	if err != nil {
-		LogServiceError(h.logger, err, "Get photo", 
+		LogServiceError(h.logger, c, err, "Get photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
@@ -211,7 +202,7 @@ func (h *PhotoHandler) GetPhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Get photo", 
+	LogServiceSuccess(h.logger, c, "Get photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 
@@ -237,7 +228,7 @@ func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
-		LogValidationError(h.logger, err, "Update photo", 
+		LogValidationError(h.logger, c, err, "Update photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -255,13 +246,13 @@ func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogRequestParsed(h.logger, "Update photo", 
+	LogRequestParsed(h.logger, c, "Update photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()),
 		zap.String("title", req.Title))
 
 	if err := h.validator.Struct(&req); err != nil {
-		LogValidationError(h.logger, err, "Update photo", 
+		LogValidationError(h.logger, c, err, "Update photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -270,13 +261,13 @@ func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Update photo", 
+	LogServiceCall(h.logger, c, "Update photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 
 	photo, err := h.photoService.UpdatePhoto(c.Context(), photoID, userID, &req)
 	if err != nil {
-		LogServiceError(h.logger, err, "Update photo", 
+		LogServiceError(h.logger, c, err, "Update photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
@@ -285,7 +276,7 @@ func (h *PhotoHandler) UpdatePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Update photo", 
+	LogServiceSuccess(h.logger, c, "Update photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 
@@ -309,7 +300,7 @@ func (h *PhotoHandler) DeletePhoto(c *fiber.Ctx) error {
 	userID := getUserIDFromContext(c)
 	photoID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
-		LogValidationError(h.logger, err, "Delete photo", 
+		LogValidationError(h.logger, c, err, "Delete photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id_param", c.Params("id")))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
@@ -318,13 +309,13 @@ func (h *PhotoHandler) DeletePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceCall(h.logger, "Delete photo", 
+	LogServiceCall(h.logger, c, "Delete photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 
 	err = h.photoService.DeletePhoto(c.Context(), photoID, userID)
 	if err != nil {
-		LogServiceError(h.logger, err, "Delete photo", 
+		LogServiceError(h.logger, c, err, "Delete photo", 
 			zap.String("user_id", userID.Hex()),
 			zap.String("photo_id", photoID.Hex()))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
@@ -333,7 +324,7 @@ func (h *PhotoHandler) DeletePhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	LogServiceSuccess(h.logger, "Delete photo", 
+	LogServiceSuccess(h.logger, c, "Delete photo", 
 		zap.String("user_id", userID.Hex()),
 		zap.String("photo_id", photoID.Hex()))
 

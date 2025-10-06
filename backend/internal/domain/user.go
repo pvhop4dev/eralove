@@ -32,12 +32,12 @@ type User struct {
 
 // CreateUserRequest represents the request to create a new user
 type CreateUserRequest struct {
-	Name        string     `json:"name" validate:"required,min=2,max=100"`
-	Email       string     `json:"email" validate:"required,email"`
-	Password    string     `json:"password" validate:"required,min=6"`
-	DateOfBirth *time.Time `json:"date_of_birth,omitempty"`
-	Gender      string     `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	Avatar      string     `json:"avatar,omitempty"`
+	Name        string  `json:"name" validate:"required,min=2,max=100"`
+	Email       string  `json:"email" validate:"required,email"`
+	Password    string  `json:"password" validate:"required,min=6"`
+	DateOfBirth *Date   `json:"date_of_birth,omitempty"`
+	Gender      string  `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
+	Avatar      string  `json:"avatar,omitempty"`
 }
 
 // LoginRequest represents the login request
@@ -48,11 +48,11 @@ type LoginRequest struct {
 
 // UpdateUserRequest represents the request to update user information
 type UpdateUserRequest struct {
-	Name        string     `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
-	DateOfBirth *time.Time `json:"date_of_birth,omitempty"`
-	Gender      string     `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	Avatar      string     `json:"avatar,omitempty"`
-	PartnerName string     `json:"partner_name,omitempty"`
+	Name        string  `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
+	DateOfBirth *Date   `json:"date_of_birth,omitempty"`
+	Gender      string  `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
+	Avatar      string  `json:"avatar,omitempty"`
+	PartnerName string  `json:"partner_name,omitempty"`
 }
 
 // UserResponse represents the user response (without sensitive data)

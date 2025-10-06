@@ -28,7 +28,8 @@ type Photo struct {
 type CreatePhotoRequest struct {
 	Title       string    `json:"title" validate:"required,min=1,max=200"`
 	Description string    `json:"description,omitempty"`
-	ImageURL    string    `json:"image_url" validate:"required"`
+	FilePath    string    `json:"file_path" validate:"required"` // Path from upload endpoint
+	ImageURL    string    `json:"image_url,omitempty"`           // Will be generated from FilePath
 	Date        time.Time `json:"date"`
 	Location    string    `json:"location,omitempty"`
 	Tags        []string  `json:"tags,omitempty"`
@@ -100,6 +101,7 @@ type PhotoRepository interface {
 // PhotoService defines the interface for photo business logic
 type PhotoService interface {
 	CreatePhoto(ctx context.Context, userID primitive.ObjectID, req *CreatePhotoRequest, file interface{}) (*PhotoResponse, error)
+	CreatePhotoWithPath(ctx context.Context, userID primitive.ObjectID, req *CreatePhotoRequest) (*PhotoResponse, error)
 	GetPhoto(ctx context.Context, photoID, userID primitive.ObjectID) (*PhotoResponse, error)
 	GetUserPhotos(ctx context.Context, userID primitive.ObjectID, partnerID *primitive.ObjectID, page, limit int) ([]*PhotoResponse, int64, error)
 	UpdatePhoto(ctx context.Context, photoID, userID primitive.ObjectID, req *UpdatePhotoRequest) (*PhotoResponse, error)

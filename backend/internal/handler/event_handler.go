@@ -66,7 +66,9 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 
 	event, err := h.eventService.CreateEvent(c.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to create event", zap.Error(err))
+		h.logger.Error("Failed to create event",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to create event",
 			Message: err.Error(),
@@ -109,7 +111,9 @@ func (h *EventHandler) GetEvents(c *fiber.Ctx) error {
 
 	events, total, err := h.eventService.GetUserEvents(c.Context(), userID, partnerID, year, month, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get events", zap.Error(err))
+		h.logger.Error("Failed to get events",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get events",
 			Message: err.Error(),
@@ -147,7 +151,9 @@ func (h *EventHandler) GetEvent(c *fiber.Ctx) error {
 
 	event, err := h.eventService.GetEvent(c.Context(), eventID, userID)
 	if err != nil {
-		h.logger.Error("Failed to get event", zap.Error(err))
+		h.logger.Error("Failed to get event",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusNotFound).JSON(ErrorResponse{
 			Error:   "Event not found",
 			Message: err.Error(),
@@ -197,7 +203,9 @@ func (h *EventHandler) UpdateEvent(c *fiber.Ctx) error {
 
 	event, err := h.eventService.UpdateEvent(c.Context(), eventID, userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to update event", zap.Error(err))
+		h.logger.Error("Failed to update event",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to update event",
 			Message: err.Error(),
@@ -230,7 +238,9 @@ func (h *EventHandler) DeleteEvent(c *fiber.Ctx) error {
 
 	err = h.eventService.DeleteEvent(c.Context(), eventID, userID)
 	if err != nil {
-		h.logger.Error("Failed to delete event", zap.Error(err))
+		h.logger.Error("Failed to delete event",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to delete event",
 			Message: err.Error(),

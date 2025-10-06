@@ -70,12 +70,18 @@ func (s *UserService) Register(ctx context.Context, req *domain.CreateUserReques
 	// Set verification token expiry (24 hours)
 	verificationExpiry := time.Now().Add(24 * time.Hour)
 
+	// Convert Date to time.Time
+	var dateOfBirth *time.Time
+	if req.DateOfBirth != nil {
+		dateOfBirth = req.DateOfBirth.ToTimePtr()
+	}
+
 	// Create user
 	user := &domain.User{
 		Name:                    req.Name,
 		Email:                   req.Email,
 		PasswordHash:            hashedPassword,
-		DateOfBirth:             req.DateOfBirth,
+		DateOfBirth:             dateOfBirth,
 		Gender:                  req.Gender,
 		Avatar:                  req.Avatar,
 		IsEmailVerified:         false,
@@ -161,7 +167,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID primitive.Object
 		user.Name = req.Name
 	}
 	if req.DateOfBirth != nil {
-		user.DateOfBirth = req.DateOfBirth
+		user.DateOfBirth = req.DateOfBirth.ToTimePtr()
 	}
 	if req.Gender != "" {
 		user.Gender = req.Gender

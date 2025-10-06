@@ -69,7 +69,10 @@ func (i *I18n) GetLocalizer(lang string) *i18n.Localizer {
 
 // Translate translates a message key with optional template data
 func (i *I18n) Translate(lang, messageID string, templateData map[string]interface{}) string {
-	localizer := i.GetLocalizer(lang)
+	// Parse Accept-Language header if it contains multiple languages
+	parsedLang := i.ParseAcceptLanguage(lang)
+	
+	localizer := i.GetLocalizer(parsedLang)
 
 	config := &i18n.LocalizeConfig{
 		MessageID:    messageID,
@@ -81,6 +84,7 @@ func (i *I18n) Translate(lang, messageID string, templateData map[string]interfa
 		i.logger.Warn("Translation not found",
 			zap.String("messageID", messageID),
 			zap.String("lang", lang),
+			zap.String("parsed_lang", parsedLang),
 			zap.Error(err))
 		return messageID // Return the message ID as fallback
 	}

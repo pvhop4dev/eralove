@@ -66,7 +66,9 @@ func (h *MessageHandler) SendMessage(c *fiber.Ctx) error {
 
 	message, err := h.messageService.SendMessage(c.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to send message", zap.Error(err))
+		h.logger.Error("Failed to send message",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to send message",
 			Message: err.Error(),
@@ -114,7 +116,9 @@ func (h *MessageHandler) GetMessages(c *fiber.Ctx) error {
 
 	messages, total, err := h.messageService.GetConversation(c.Context(), userID, partnerID, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get messages", zap.Error(err))
+		h.logger.Error("Failed to get messages",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get messages",
 			Message: err.Error(),
@@ -149,7 +153,9 @@ func (h *MessageHandler) GetConversations(c *fiber.Ctx) error {
 
 	conversations, total, err := h.messageService.GetUserConversations(c.Context(), userID, page, limit)
 	if err != nil {
-		h.logger.Error("Failed to get conversations", zap.Error(err))
+		h.logger.Error("Failed to get conversations",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get conversations",
 			Message: err.Error(),
@@ -196,7 +202,9 @@ func (h *MessageHandler) MarkAsRead(c *fiber.Ctx) error {
 
 	err := h.messageService.MarkAsRead(c.Context(), userID, req.PartnerID)
 	if err != nil {
-		h.logger.Error("Failed to mark messages as read", zap.Error(err))
+		h.logger.Error("Failed to mark messages as read",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to mark messages as read",
 			Message: err.Error(),
@@ -232,7 +240,9 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 
 	err = h.messageService.DeleteMessage(c.Context(), messageID, userID)
 	if err != nil {
-		h.logger.Error("Failed to delete message", zap.Error(err))
+		h.logger.Error("Failed to delete message",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to delete message",
 			Message: err.Error(),

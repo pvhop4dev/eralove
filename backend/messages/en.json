@@ -1,86 +1,41 @@
-[
-  {
-    "id": "invalid_request",
-    "message": "Invalid request body"
-  },
-  {
-    "id": "validation_failed",
-    "message": "Validation failed"
-  },
-  {
-    "id": "user_created",
-    "message": "User created successfully"
-  },
-  {
-    "id": "registration_success",
-    "message": "Registration successful! Please check your email to verify your account."
-  },
-  {
-    "id": "login_successful",
-    "message": "Login successful"
-  },
-  {
-    "id": "logout_successful",
-    "message": "Logout successful"
-  },
-  {
-    "id": "email_verified",
-    "message": "Email verified successfully"
-  },
-  {
-    "id": "verification_email_sent",
-    "message": "Verification email sent successfully"
-  },
-  {
-    "id": "password_reset_email_sent",
-    "message": "Password reset email sent successfully"
-  },
-  {
-    "id": "password_reset_successful",
-    "message": "Password reset successful"
-  },
-  {
-    "id": "profile_updated",
-    "message": "Profile updated successfully"
-  },
-  {
-    "id": "account_deleted",
-    "message": "Account deleted successfully"
-  },
-  {
-    "id": "unauthorized",
-    "message": "Unauthorized access"
-  },
-  {
-    "id": "forbidden",
-    "message": "Access forbidden"
-  },
-  {
-    "id": "not_found",
-    "message": "Resource not found"
-  },
-  {
-    "id": "internal_error",
-    "message": "Internal server error"
-  },
-  {
-    "id": "invalid_credentials",
-    "message": "Invalid email or password"
-  },
-  {
-    "id": "user_already_exists",
-    "message": "User with this email already exists"
-  },
-  {
-    "id": "email_not_verified",
-    "message": "Please verify your email address first"
-  },
-  {
-    "id": "invalid_token",
-    "message": "Invalid or expired token"
-  },
-  {
-    "id": "token_expired",
-    "message": "Token has expired"
-  }
-]
+{
+  "invalid_request": "Invalid request body",
+  "validation_failed": "Validation failed",
+  "user_created": "User created successfully",
+  "registration_success": "Registration successful! Please check your email to verify your account.",
+  "login_successful": "Login successful",
+  "logout_successful": "Logout successful",
+  "email_verified": "Email verified successfully",
+  "verification_email_sent": "Verification email sent successfully",
+  "password_reset_email_sent": "Password reset email sent successfully",
+  "password_reset_successful": "Password reset successful",
+  "profile_updated": "Profile updated successfully",
+  "account_deleted": "Account deleted successfully",
+  "unauthorized": "Unauthorized access",
+  "forbidden": "Access forbidden",
+  "not_found": "Resource not found",
+  "internal_error": "Internal server error",
+  "invalid_credentials": "Invalid email or password",
+  "user_already_exists": "User with this email already exists",
+  "email_not_verified": "Please verify your email address first",
+  "invalid_token": "Invalid or expired token",
+  "token_expired": "Token has expired",
+  "registration_failed": "Registration failed",
+  "login_failed": "Login failed",
+  "logout_failed": "Failed to logout",
+  "profile_update_failed": "Failed to update profile",
+  "account_deletion_failed": "Failed to delete account",
+  "email_verification_failed": "Email verification failed",
+  "verification_email_failed": "Failed to send verification email",
+  "password_reset_failed": "Failed to send password reset email",
+  "invalid_verification_token": "Invalid or expired verification token",
+  "invalid_reset_token": "Invalid or expired password reset token",
+  "user_not_found": "User not found",
+  "email_already_verified": "Email is already verified",
+  "weak_password": "Password is too weak. Must be at least 8 characters with uppercase, lowercase, and numbers",
+  "password_mismatch": "Passwords do not match",
+  "invalid_email": "Invalid email address",
+  "required_field": "This field is required",
+  "operation_successful": "Operation completed successfully",
+  "operation_failed": "Operation failed"
+}
