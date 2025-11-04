@@ -36,7 +36,15 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	validate := infrastructure.ProvideValidator()
 	i18n := infrastructure.ProvideI18n(logger)
 	userHandler := handler.ProvideUserHandler(userService, validate, i18n, logger)
-	dependencies := ProvideDependencies(userHandler)
+	photoRepository := repository.ProvidePhotoRepository(mongoDB, logger)
+	storageService, err := infrastructure.ProvideStorageService(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+	photoService := service.ProvidePhotoService(photoRepository, userRepository, storageService, logger)
+	photoHandler := handler.ProvidePhotoHandler(photoService, validate, i18n, logger)
+	uploadHandler := handler.ProvideUploadHandler(storageService, i18n, logger)
+	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler)
 	app, err := ProvideApp(cfg, logger, dependencies)
 	if err != nil {
 		return nil, err
@@ -52,9 +60,16 @@ var ApplicationSet = wire.NewSet(infrastructure.InfrastructureSet, repository.Re
 )
 
 // ProvideDependencies creates the dependencies struct
-func ProvideDependencies(userHandler *handler.UserHandler) *Dependencies {
+func ProvideDependencies(
+	userHandler *handler.UserHandler,
+	photoHandler *handler.PhotoHandler,
+	uploadHandler *handler.UploadHandler,
+
+) *Dependencies {
 	return &Dependencies{
-		UserHandler: userHandler,
+		UserHandler:   userHandler,
+		PhotoHandler:  photoHandler,
+		UploadHandler: uploadHandler,
 	}
 }
 

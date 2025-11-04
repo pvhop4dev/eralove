@@ -170,7 +170,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 
 	LogServiceCall(h.logger, c, "Login", zap.String("email", req.Email))
 
-	user, token, err := h.userService.Login(c.Context(), &req)
+	user, tokenPair, err := h.userService.Login(c.Context(), &req)
 	if err != nil {
 		LogServiceError(h.logger, c, err, "Login", zap.String("email", req.Email))
 		return c.Status(fiber.StatusUnauthorized).JSON(ErrorResponse{
@@ -185,10 +185,10 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 
 	return c.JSON(LoginResponse{
 		User:         user,
-		AccessToken:  token,
-		RefreshToken: "",
-		TokenType:    "Bearer",
-		ExpiresIn:    900, // 15 minutes
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		TokenType:    tokenPair.TokenType,
+		ExpiresIn:    tokenPair.ExpiresIn,
 		Message:      h.i18n.Translate(c.Get("Accept-Language", "en"), "login_successful", nil),
 	})
 }

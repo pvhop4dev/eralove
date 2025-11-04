@@ -216,3 +216,6 @@ func ErrFileTooLargeError(maxSize int64) *AppError {
 		400,
 	)
 }
+
+// ErrUnauthorized is a simple error for unauthorized access
+var ErrUnauthorized = ErrUnauthorizedError()

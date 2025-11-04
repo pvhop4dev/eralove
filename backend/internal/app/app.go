@@ -47,6 +47,7 @@ type Dependencies struct {
 	EventHandler        *handler.EventHandler
 	MessageHandler      *handler.MessageHandler
 	MatchRequestHandler *handler.MatchRequestHandler
+	UploadHandler       *handler.UploadHandler
 }
 
 // NewWithDependencies creates a new application instance with injected dependencies
@@ -331,6 +332,10 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	// Swagger documentation
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
+	// Static file serving for uploaded files (public access - no auth required)
+	// Register at app level to completely bypass all middleware
+	app.Static("/api/v1/files", "./uploads")
+
 	// API routes
 	api := app.Group("/api/v1")
 
@@ -342,7 +347,9 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	auth.Post("/logout", deps.UserHandler.Logout)
 
 	// Protected routes (authentication required)
-	protected := api.Group("/", jwtMiddleware(jwtManager, logger))
+	// Use specific path instead of "/" to avoid catching all routes
+	protected := api.Group("")
+	protected.Use(jwtMiddleware(jwtManager, logger))
 
 	// User routes
 	users := protected.Group("/users")
@@ -358,30 +365,37 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	photos.Put("/:id", deps.PhotoHandler.UpdatePhoto)
 	photos.Delete("/:id", deps.PhotoHandler.DeletePhoto)
 
-	// Event routes (when handlers are available)
-	events := protected.Group("/events")
-	events.Post("/", deps.EventHandler.CreateEvent)
-	events.Get("/", deps.EventHandler.GetEvents)
-	events.Get("/:id", deps.EventHandler.GetEvent)
-	events.Put("/:id", deps.EventHandler.UpdateEvent)
-	events.Delete("/:id", deps.EventHandler.DeleteEvent)
+	// TODO: Uncomment when handlers are implemented
+	// // Event routes
+	// events := protected.Group("/events")
+	// events.Post("/", deps.EventHandler.CreateEvent)
+	// events.Get("/", deps.EventHandler.GetEvents)
+	// events.Get("/:id", deps.EventHandler.GetEvent)
+	// events.Put("/:id", deps.EventHandler.UpdateEvent)
+	// events.Delete("/:id", deps.EventHandler.DeleteEvent)
 
-	// Message routes (when handlers are available)
-	messages := protected.Group("/messages")
-	messages.Post("/", deps.MessageHandler.SendMessage)
-	messages.Get("/", deps.MessageHandler.GetMessages)
-	messages.Get("/conversations", deps.MessageHandler.GetConversations)
-	messages.Post("/mark-read", deps.MessageHandler.MarkAsRead)
-	messages.Delete("/:id", deps.MessageHandler.DeleteMessage)
+	// // Message routes
+	// messages := protected.Group("/messages")
+	// messages.Post("/", deps.MessageHandler.SendMessage)
+	// messages.Get("/", deps.MessageHandler.GetMessages)
+	// messages.Get("/conversations", deps.MessageHandler.GetConversations)
+	// messages.Post("/mark-read", deps.MessageHandler.MarkAsRead)
+	// messages.Delete("/:id", deps.MessageHandler.DeleteMessage)
 
-	// Match request routes (when handlers are available)
-	matchRequests := protected.Group("/match-requests")
-	matchRequests.Post("/", deps.MatchRequestHandler.SendMatchRequest)
-	matchRequests.Get("/sent", deps.MatchRequestHandler.GetSentRequests)
-	matchRequests.Get("/received", deps.MatchRequestHandler.GetReceivedRequests)
-	matchRequests.Get("/:id", deps.MatchRequestHandler.GetMatchRequest)
-	matchRequests.Post("/:id/respond", deps.MatchRequestHandler.RespondToMatchRequest)
-	matchRequests.Delete("/:id", deps.MatchRequestHandler.CancelMatchRequest)
+	// // Match request routes
+	// matchRequests := protected.Group("/match-requests")
+	// matchRequests.Post("/", deps.MatchRequestHandler.SendMatchRequest)
+	// matchRequests.Get("/sent", deps.MatchRequestHandler.GetSentRequests)
+	// matchRequests.Get("/received", deps.MatchRequestHandler.GetReceivedRequests)
+	// matchRequests.Get("/:id", deps.MatchRequestHandler.GetMatchRequest)
+	// matchRequests.Post("/:id/respond", deps.MatchRequestHandler.RespondToMatchRequest)
+	// matchRequests.Delete("/:id", deps.MatchRequestHandler.CancelMatchRequest)
+
+	// Upload routes
+	upload := protected.Group("/upload")
+	upload.Post("/", deps.UploadHandler.UploadFile)
+	upload.Post("/multiple", deps.UploadHandler.UploadMultipleFiles)
+	upload.Delete("/", deps.UploadHandler.DeleteFile)
 }
 
 // jwtMiddleware creates JWT authentication middleware

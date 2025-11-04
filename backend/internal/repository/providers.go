@@ -11,6 +11,10 @@ import (
 var RepositorySet = wire.NewSet(
 	ProvideUserRepository,
 	ProvidePhotoRepository,
+	// TODO: Uncomment when repositories are implemented
+	// ProvideEventRepository,
+	// ProvideMessageRepository,
+	// ProvideMatchRequestRepository,
 )
 
 // ProvideUserRepository provides a user repository
@@ -22,3 +26,19 @@ func ProvideUserRepository(db *database.MongoDB, logger *zap.Logger) domain.User
 func ProvidePhotoRepository(db *database.MongoDB, logger *zap.Logger) domain.PhotoRepository {
 	return NewPhotoRepository(db.Database, logger)
 }
+
+// TODO: Uncomment when repositories are implemented
+// // ProvideEventRepository provides an event repository
+// func ProvideEventRepository(db *database.MongoDB, logger *zap.Logger) domain.EventRepository {
+// 	return NewEventRepository(db.Database, logger)
+// }
+
+// // ProvideMessageRepository provides a message repository
+// func ProvideMessageRepository(db *database.MongoDB, logger *zap.Logger) domain.MessageRepository {
+// 	return NewMessageRepository(db.Database, logger)
+// }
+
+// // ProvideMatchRequestRepository provides a match request repository
+// func ProvideMatchRequestRepository(db *database.MongoDB, logger *zap.Logger) domain.MatchRequestRepository {
+// 	return NewMatchRequestRepository(db.Database, logger)
+// }

@@ -31,9 +31,23 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 }
 
 // ProvideDependencies creates the dependencies struct
-func ProvideDependencies(userHandler *handler.UserHandler) *Dependencies {
+func ProvideDependencies(
+	userHandler *handler.UserHandler,
+	photoHandler *handler.PhotoHandler,
+	uploadHandler *handler.UploadHandler,
+	// TODO: Add when implemented
+	// eventHandler *handler.EventHandler,
+	// messageHandler *handler.MessageHandler,
+	// matchRequestHandler *handler.MatchRequestHandler,
+) *Dependencies {
 	return &Dependencies{
-		UserHandler: userHandler,
+		UserHandler:   userHandler,
+		PhotoHandler:  photoHandler,
+		UploadHandler: uploadHandler,
+		// TODO: Add when implemented
+		// EventHandler:        eventHandler,
+		// MessageHandler:      messageHandler,
+		// MatchRequestHandler: matchRequestHandler,
 	}
 }
 

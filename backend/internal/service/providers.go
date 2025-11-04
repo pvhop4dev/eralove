@@ -12,6 +12,10 @@ import (
 var ServiceSet = wire.NewSet(
 	ProvideUserService,
 	ProvidePhotoService,
+	// TODO: Uncomment when services are fully implemented
+	// ProvideEventService,
+	// ProvideMessageService,
+	// ProvideMatchRequestService,
 )
 
 // ProvideUserService provides a user service
@@ -34,3 +38,28 @@ func ProvidePhotoService(
 ) domain.PhotoService {
 	return NewPhotoService(photoRepo, userRepo, storageService, logger)
 }
+
+// TODO: Uncomment when services are fully implemented
+// // ProvideEventService provides an event service
+// func ProvideEventService(
+// 	eventRepo domain.EventRepository,
+// 	logger *zap.Logger,
+// ) domain.EventService {
+// 	return NewEventService(eventRepo, logger)
+// }
+
+// // ProvideMessageService provides a message service
+// func ProvideMessageService(
+// 	messageRepo domain.MessageRepository,
+// 	logger *zap.Logger,
+// ) domain.MessageService {
+// 	return NewMessageService(messageRepo, logger)
+// }
+
+// // ProvideMatchRequestService provides a match request service
+// func ProvideMatchRequestService(
+// 	matchRequestRepo domain.MatchRequestRepository,
+// 	logger *zap.Logger,
+// ) domain.MatchRequestService {
+// 	return NewMatchRequestService(matchRequestRepo, logger)
+// }

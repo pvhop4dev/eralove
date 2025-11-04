@@ -89,8 +89,10 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 	}
 
 	// Set default date if not provided
-	photoDate := req.Date
-	if photoDate.IsZero() {
+	var photoDate time.Time
+	if req.Date != nil && !req.Date.IsZero() {
+		photoDate = req.Date.Time
+	} else {
 		photoDate = time.Now()
 	}
 
@@ -114,13 +116,12 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 
 	s.logger.Info("Photo created successfully",
 		zap.String("photo_id", photo.ID.Hex()),
-		zap.String("user_id", userID.Hex()),
 		zap.String("image_url", imageURL))
 
 	return photo.ToResponse(), nil
 }
 
-// CreatePhotoWithPath creates a new photo using a pre-uploaded file path
+// CreatePhotoWithPath creates a photo with a pre-uploaded file path
 func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive.ObjectID, req *domain.CreatePhotoRequest) (*domain.PhotoResponse, error) {
 	// Get user to check if they have a partner
 	user, err := s.userRepo.GetByID(ctx, userID)
@@ -128,15 +129,22 @@ func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive
 		return nil, fmt.Errorf("user not found")
 	}
 
-	// Use the provided file path to construct the image URL
+	// Convert file path to full URL
+	// The file path is like "photos/userid_timestamp.jpg"
+	// We need to convert it to full URL: "http://localhost:8080/api/v1/files/photos/userid_timestamp.jpg"
 	imageURL := req.FilePath
 	if req.ImageURL != "" {
 		imageURL = req.ImageURL
 	}
+	
+	// Note: The URL will be accessible at /api/v1/files/{file_path}
+	// Frontend should construct: baseURL + "/files/" + image_url
 
 	// Set default date if not provided
-	photoDate := req.Date
-	if photoDate.IsZero() {
+	var photoDate time.Time
+	if req.Date != nil && !req.Date.IsZero() {
+		photoDate = req.Date.Time
+	} else {
 		photoDate = time.Now()
 	}
 
@@ -270,8 +278,8 @@ func (s *PhotoService) UpdatePhoto(ctx context.Context, photoID, userID primitiv
 	if req.ImageURL != "" {
 		photo.ImageURL = req.ImageURL
 	}
-	if !req.Date.IsZero() {
-		photo.Date = req.Date
+	if req.Date != nil && !req.Date.IsZero() {
+		photo.Date = req.Date.Time
 	}
 	if req.Location != "" {
 		photo.Location = req.Location

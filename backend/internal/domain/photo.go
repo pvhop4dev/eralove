@@ -26,24 +26,24 @@ type Photo struct {
 
 // CreatePhotoRequest represents the request to create a new photo
 type CreatePhotoRequest struct {
-	Title       string    `json:"title" validate:"required,min=1,max=200"`
-	Description string    `json:"description,omitempty"`
-	FilePath    string    `json:"file_path" validate:"required"` // Path from upload endpoint
-	ImageURL    string    `json:"image_url,omitempty"`           // Will be generated from FilePath
-	Date        time.Time `json:"date"`
-	Location    string    `json:"location,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
-	IsPrivate   bool      `json:"is_private"`
+	Title       string  `json:"title" validate:"required,min=1,max=200"`
+	Description string  `json:"description,omitempty"`
+	FilePath    string  `json:"file_path" validate:"required"` // Path from upload endpoint
+	ImageURL    string  `json:"image_url,omitempty"`           // Will be generated from FilePath
+	Date        *Date   `json:"date"`
+	Location    string  `json:"location,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+	IsPrivate   bool    `json:"is_private"`
 }
 
 // UpdatePhotoRequest represents the request to update a photo
 type UpdatePhotoRequest struct {
-	Title       string    `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-	Description string    `json:"description,omitempty"`
-	ImageURL    string    `json:"image_url,omitempty"`
-	Date        time.Time `json:"date,omitempty"`
-	Location    string    `json:"location,omitempty"`
-	Tags        []string  `json:"tags,omitempty"`
+	Title       string   `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
+	Description string   `json:"description,omitempty"`
+	ImageURL    string   `json:"image_url,omitempty"`
+	Date        *Date    `json:"date,omitempty"`
+	Location    string   `json:"location,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 	IsPrivate   *bool     `json:"is_private,omitempty"`
 }
 

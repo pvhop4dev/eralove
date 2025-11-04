@@ -144,7 +144,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*UserResponse, error)
 	Register(ctx context.Context, req *CreateUserRequest) (*UserResponse, error)
 	AuthenticateUser(ctx context.Context, req *LoginRequest) (*UserResponse, string, error)
-	Login(ctx context.Context, req *LoginRequest) (*UserResponse, string, error)
+	Login(ctx context.Context, req *LoginRequest) (*UserResponse, *TokenPair, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*TokenPair, *UserResponse, error)
 	Logout(ctx context.Context, refreshToken string) error
 	GetProfile(ctx context.Context, userID primitive.ObjectID) (*UserResponse, error)

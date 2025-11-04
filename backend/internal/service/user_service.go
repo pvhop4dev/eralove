@@ -110,13 +110,13 @@ func (s *UserService) Register(ctx context.Context, req *domain.CreateUserReques
 	return user.ToResponse(), nil
 }
 
-// Login authenticates a user and returns a JWT token
-func (s *UserService) Login(ctx context.Context, req *domain.LoginRequest) (*domain.UserResponse, string, error) {
+// Login authenticates a user and returns user data and token pair
+func (s *UserService) Login(ctx context.Context, req *domain.LoginRequest) (*domain.UserResponse, *domain.TokenPair, error) {
 	// Get user by email
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		s.logger.Warn("Login attempt with non-existent email", zap.String("email", req.Email))
-		return nil, "", fmt.Errorf("invalid credentials")
+		return nil, nil, fmt.Errorf("invalid credentials")
 	}
 
 	// Verify password
@@ -124,21 +124,29 @@ func (s *UserService) Login(ctx context.Context, req *domain.LoginRequest) (*dom
 		s.logger.Warn("Login attempt with invalid password",
 			zap.String("user_id", user.ID.Hex()),
 			zap.String("email", req.Email))
-		return nil, "", fmt.Errorf("invalid credentials")
+		return nil, nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Generate JWT token
-	token, err := s.jwtManager.GenerateToken(user.ID, user.Email, user.Name)
+	// Generate token pair (access + refresh tokens)
+	authTokenPair, err := s.jwtManager.GenerateTokenPair(user.ID, user.Email, user.Name)
 	if err != nil {
-		s.logger.Error("Failed to generate JWT token", zap.Error(err))
-		return nil, "", fmt.Errorf("failed to generate token")
+		s.logger.Error("Failed to generate token pair", zap.Error(err))
+		return nil, nil, fmt.Errorf("failed to generate tokens")
+	}
+
+	// Convert auth.TokenPair to domain.TokenPair
+	tokenPair := &domain.TokenPair{
+		AccessToken:  authTokenPair.AccessToken,
+		RefreshToken: authTokenPair.RefreshToken,
+		TokenType:    authTokenPair.TokenType,
+		ExpiresIn:    authTokenPair.ExpiresIn,
 	}
 
 	s.logger.Info("User logged in successfully",
 		zap.String("user_id", user.ID.Hex()),
 		zap.String("email", user.Email))
 
-	return user.ToResponse(), token, nil
+	return user.ToResponse(), tokenPair, nil
 }
 
 // GetProfile retrieves user profile
@@ -198,9 +206,13 @@ func (s *UserService) CreateUser(ctx context.Context, req *domain.CreateUserRequ
 	return s.Register(ctx, req)
 }
 
-// AuthenticateUser authenticates a user and returns a JWT token (alias for Login)
+// AuthenticateUser authenticates a user and returns a JWT token (backward compatibility - returns only access token)
 func (s *UserService) AuthenticateUser(ctx context.Context, req *domain.LoginRequest) (*domain.UserResponse, string, error) {
-	return s.Login(ctx, req)
+	user, tokenPair, err := s.Login(ctx, req)
+	if err != nil {
+		return nil, "", err
+	}
+	return user, tokenPair.AccessToken, nil
 }
 
 // RefreshToken refreshes an access token using a refresh token
