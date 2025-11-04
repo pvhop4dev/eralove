@@ -25,24 +25,32 @@ dev-stop: ## Stop all development services
 	@$(MAKE) infra-down
 	@echo "Note: Backend and frontend processes need to be stopped manually (Ctrl+C)"
 
+# Detect OS for cross-platform compatibility
+ifeq ($(OS),Windows_NT)
+    SLEEP_CMD = timeout /t 10 /nobreak > nul 2>&1 || ping -n 11 127.0.0.1 > nul
+else
+    SLEEP_CMD = sleep 10
+endif
+
 # Infrastructure Commands (Docker)
-infra-up: ## Start infrastructure services (MongoDB, Redis, MinIO, Nginx)
+infra-up: ## Start infrastructure services (PostgreSQL, Directus, Redis, MinIO, Nginx)
 	@echo "Starting infrastructure services..."
-	docker-compose up -d
+	docker-compose -f docker-compose.dev.yml up -d
 	@echo "Waiting for services to be healthy..."
-	@sleep 5
+	@$(SLEEP_CMD)
 	@echo "Infrastructure ready!"
-	@echo "  - MongoDB: localhost:27017"
+	@echo "  - PostgreSQL: localhost:5432"
+	@echo "  - Directus Admin: http://localhost:8055 (admin@eralove.com/Admin@123456)"
 	@echo "  - Redis: localhost:6379"
 	@echo "  - MinIO API: localhost:9000"
 	@echo "  - MinIO Console: http://localhost:9001 (minioadmin/minioadmin123)"
 	@echo "  - Nginx: localhost:80"
 
 infra-down: ## Stop infrastructure services
-	docker-compose down
+	docker-compose -f docker-compose.dev.yml down
 
 infra-logs: ## Show infrastructure logs
-	docker-compose logs -f
+	docker-compose -f docker-compose.dev.yml logs -f
 
 infra-restart: infra-down infra-up ## Restart infrastructure services
 
@@ -77,15 +85,21 @@ install-deps: ## Install all dependencies
 # Database Commands
 db-reset: ## Reset database (WARNING: This will delete all data)
 	@echo "Resetting database..."
-	docker-compose down -v
-	docker volume rm eralove_mongodb_data eralove_redis_data 2>/dev/null || true
+	docker-compose -f docker-compose.dev.yml down -v
+	docker volume rm eralove_postgres_dev_data eralove_redis_dev_data 2>/dev/null || true
 	@echo "Database reset complete!"
 
-db-shell-mongo: ## Open MongoDB shell
-	docker exec -it eralove-mongodb mongosh -u admin -p password123 --authenticationDatabase admin
+db-shell-postgres: ## Open PostgreSQL shell
+	docker exec -it eralove-postgres-dev psql -U directus -d directus
 
 db-shell-redis: ## Open Redis CLI
-	docker exec -it eralove-redis redis-cli -a password123
+	docker exec -it eralove-redis-dev redis-cli -a password123
+
+directus-admin: ## Open Directus Admin in browser
+	@echo "Opening Directus Admin..."
+	@echo "URL: http://localhost:8055"
+	@echo "Email: admin@eralove.com"
+	@echo "Password: Admin@123456"
 
 # Testing Commands
 test-backend: ## Run backend tests
@@ -126,11 +140,14 @@ health: ## Check health of all services
 	@echo "Frontend:"
 	@curl -f http://localhost:5173 > /dev/null 2>&1 && echo "  ✅ Frontend: UP" || echo "  ❌ Frontend: DOWN"
 	@echo ""
-	@echo "MongoDB:"
-	@docker exec eralove-mongodb mongosh --eval "db.adminCommand('ping')" > /dev/null 2>&1 && echo "  ✅ MongoDB: UP" || echo "  ❌ MongoDB: DOWN"
+	@echo "PostgreSQL:"
+	@docker exec eralove-postgres-dev pg_isready -U directus > /dev/null 2>&1 && echo "  ✅ PostgreSQL: UP" || echo "  ❌ PostgreSQL: DOWN"
+	@echo ""
+	@echo "Directus:"
+	@curl -f http://localhost:8055/server/health > /dev/null 2>&1 && echo "  ✅ Directus: UP" || echo "  ❌ Directus: DOWN"
 	@echo ""
 	@echo "Redis:"
-	@docker exec eralove-redis redis-cli -a password123 ping > /dev/null 2>&1 && echo "  ✅ Redis: UP" || echo "  ❌ Redis: DOWN"
+	@docker exec eralove-redis-dev redis-cli -a password123 ping > /dev/null 2>&1 && echo "  ✅ Redis: UP" || echo "  ❌ Redis: DOWN"
 	@echo ""
 	@echo "MinIO:"
 	@curl -f http://localhost:9000/minio/health/live > /dev/null 2>&1 && echo "  ✅ MinIO: UP" || echo "  ❌ MinIO: DOWN"
@@ -138,21 +155,24 @@ health: ## Check health of all services
 # Status Commands
 status: ## Show status of all services
 	@echo "=== Infrastructure Services ==="
-	@docker-compose ps
+	@docker-compose -f docker-compose.dev.yml ps
 	@echo ""
 	@echo "=== Application Processes ==="
 	@echo "Backend: Check terminal running 'make backend'"
 	@echo "Frontend: Check terminal running 'make frontend'"
 
 # Logs Commands
-logs-mongo: ## Show MongoDB logs
-	docker-compose logs -f mongodb
+logs-postgres: ## Show PostgreSQL logs
+	docker-compose -f docker-compose.dev.yml logs -f postgres
+
+logs-directus: ## Show Directus logs
+	docker-compose -f docker-compose.dev.yml logs -f directus
 
 logs-redis: ## Show Redis logs
-	docker-compose logs -f redis
+	docker-compose -f docker-compose.dev.yml logs -f redis
 
 logs-nginx: ## Show Nginx logs
-	docker-compose logs -f nginx
+	docker-compose -f docker-compose.dev.yml logs -f nginx
 
 logs-minio: ## Show MinIO logs
-	docker-compose logs -f minio
+	docker-compose -f docker-compose.dev.yml logs -f minio

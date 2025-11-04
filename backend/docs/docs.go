@@ -25,6 +25,459 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/cms/blog/posts": {
+            "get": {
+                "description": "Get blog posts from Directus",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get blog posts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status filter",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cms/files": {
+            "get": {
+                "description": "Get files from Directus",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get files",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cms/pages": {
+            "get": {
+                "description": "Get pages from Directus",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get pages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cms/settings": {
+            "get": {
+                "description": "Get settings from Directus",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cms/{collection}": {
+            "get": {
+                "description": "Get items from a Directus collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get content from collection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection name",
+                        "name": "collection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new item in a Directus collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Create content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection name",
+                        "name": "collection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Content data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cms/{collection}/{id}": {
+            "get": {
+                "description": "Get a single item from a Directus collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Get content by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection name",
+                        "name": "collection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an item from a Directus collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Delete content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection name",
+                        "name": "collection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing item in a Directus collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMS"
+                ],
+                "summary": "Update content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Collection name",
+                        "name": "collection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Content data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/forgot-password": {
             "post": {
                 "description": "Send password reset email to user",
@@ -45,7 +498,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ForgotPasswordRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.ForgotPasswordRequest"
                         }
                     }
                 ],
@@ -53,13 +506,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -85,7 +538,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.LoginRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.LoginRequest"
                         }
                     }
                 ],
@@ -93,19 +546,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginResponse"
+                            "$ref": "#/definitions/internal_handler.LoginResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -136,7 +589,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.LogoutRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.LogoutRequest"
                         }
                     }
                 ],
@@ -144,13 +597,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -176,7 +629,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.RefreshTokenRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -184,19 +637,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.LoginResponse"
+                            "$ref": "#/definitions/internal_handler.LoginResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -215,34 +668,23 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Register a new user",
-                "parameters": [
-                    {
-                        "description": "User registration data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.CreateUserRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -268,7 +710,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ResendVerificationRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.ResendVerificationRequest"
                         }
                     }
                 ],
@@ -276,13 +718,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -308,7 +750,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ResetPasswordRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -316,13 +758,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -348,7 +790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.EmailVerificationRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EmailVerificationRequest"
                         }
                     }
                 ],
@@ -356,19 +798,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -427,13 +869,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.EventListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -462,7 +904,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.CreateEventRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.CreateEventRequest"
                         }
                     }
                 ],
@@ -470,19 +912,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/domain.EventResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -516,19 +958,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.EventResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -564,7 +1006,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdateEventRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UpdateEventRequest"
                         }
                     }
                 ],
@@ -572,19 +1014,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.EventResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -619,13 +1061,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -656,7 +1098,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.CreateMatchRequestRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.CreateMatchRequestRequest"
                         }
                     }
                 ],
@@ -664,19 +1106,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/domain.MatchRequestResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -723,13 +1165,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.MatchRequestListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -776,13 +1218,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.MatchRequestListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -816,19 +1258,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.MatchRequestResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -863,13 +1305,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -907,7 +1349,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.RespondToMatchRequestRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.RespondToMatchRequestRequest"
                         }
                     }
                 ],
@@ -915,19 +1357,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.MatchRequestResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -975,19 +1417,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.MessageListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MessageListResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1016,7 +1458,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.CreateMessageRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.CreateMessageRequest"
                         }
                     }
                 ],
@@ -1024,19 +1466,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/domain.MessageResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1077,13 +1519,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.ConversationListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.ConversationListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1114,7 +1556,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.MarkAsReadRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MarkAsReadRequest"
                         }
                     }
                 ],
@@ -1122,19 +1564,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1171,13 +1613,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1224,13 +1666,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.PhotoListResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.PhotoListResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1241,9 +1683,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Upload and create a new photo",
+                "description": "Create a new photo with uploaded file path",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -1254,48 +1696,32 @@ const docTemplate = `{
                 "summary": "Create a new photo",
                 "parameters": [
                     {
-                        "type": "file",
-                        "description": "Photo file",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Photo title",
-                        "name": "title",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Photo description",
-                        "name": "description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Photo tags (comma separated)",
-                        "name": "tags",
-                        "in": "formData"
+                        "description": "Photo data with file_path",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.CreatePhotoRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/domain.PhotoResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.PhotoResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1329,19 +1755,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.PhotoResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.PhotoResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1377,7 +1803,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdatePhotoRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UpdatePhotoRequest"
                         }
                     }
                 ],
@@ -1385,19 +1811,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.PhotoResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.PhotoResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1432,13 +1858,181 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a single file and get the file path",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "summary": "Upload a file",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Folder name (photos, avatars, documents)",
+                        "name": "folder",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.UploadFileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a file by its path",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "summary": "Delete a file",
+                "parameters": [
+                    {
+                        "description": "File path",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/upload/multiple": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload multiple files and get the file paths",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "upload"
+                ],
+                "summary": "Upload multiple files",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Files to upload",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Folder name (photos, avatars, documents)",
+                        "name": "folder",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/internal_handler.UploadFileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1463,13 +2057,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.SuccessResponse"
+                            "$ref": "#/definitions/internal_handler.SuccessResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1494,19 +2088,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UserResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1535,7 +2129,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdateUserRequest"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1543,19 +2137,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.UserResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/handler.ErrorResponse"
+                            "$ref": "#/definitions/internal_handler.ErrorResponse"
                         }
                     }
                 }
@@ -1563,11 +2157,11 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.Conversation": {
+        "github_com_eralove_eralove-backend_internal_domain.Conversation": {
             "type": "object",
             "properties": {
                 "last_message": {
-                    "$ref": "#/definitions/domain.Message"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.Message"
                 },
                 "partner_avatar": {
                     "type": "string"
@@ -1586,13 +2180,13 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ConversationListResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.ConversationListResponse": {
             "type": "object",
             "properties": {
                 "conversations": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.Conversation"
+                        "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.Conversation"
                     }
                 },
                 "limit": {
@@ -1606,7 +2200,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.CreateEventRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.CreateEventRequest": {
             "type": "object",
             "required": [
                 "date",
@@ -1643,7 +2237,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reminder": {
-                    "$ref": "#/definitions/domain.EventReminder"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventReminder"
                 },
                 "time": {
                     "type": "string"
@@ -1655,7 +2249,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.CreateMatchRequestRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.CreateMatchRequestRequest": {
             "type": "object",
             "required": [
                 "anniversary_date",
@@ -1673,7 +2267,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.CreateMessageRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.CreateMessageRequest": {
             "type": "object",
             "required": [
                 "content",
@@ -1697,43 +2291,55 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.CreateUserRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.CreatePhotoRequest": {
             "type": "object",
             "required": [
-                "email",
-                "name",
-                "password"
+                "file_path",
+                "title"
             ],
             "properties": {
-                "avatar": {
+                "date": {
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.Date"
+                },
+                "description": {
                     "type": "string"
                 },
-                "date_of_birth": {
+                "file_path": {
+                    "description": "Path from upload endpoint",
                     "type": "string"
                 },
-                "email": {
+                "image_url": {
+                    "description": "Will be generated from FilePath",
                     "type": "string"
                 },
-                "gender": {
-                    "type": "string",
-                    "enum": [
-                        "male",
-                        "female",
-                        "other"
-                    ]
+                "is_private": {
+                    "type": "boolean"
                 },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
+                "location": {
+                    "type": "string"
                 },
-                "password": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
                     "type": "string",
-                    "minLength": 6
+                    "maxLength": 200,
+                    "minLength": 1
                 }
             }
         },
-        "domain.EmailVerificationRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.Date": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_eralove_eralove-backend_internal_domain.EmailVerificationRequest": {
             "type": "object",
             "required": [
                 "token"
@@ -1744,13 +2350,13 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.EventListResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.EventListResponse": {
             "type": "object",
             "properties": {
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.EventResponse"
+                        "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventResponse"
                     }
                 },
                 "limit": {
@@ -1764,7 +2370,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.EventReminder": {
+        "github_com_eralove_eralove-backend_internal_domain.EventReminder": {
             "type": "object",
             "properties": {
                 "enabled": {
@@ -1781,7 +2387,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.EventResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.EventResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1815,7 +2421,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reminder": {
-                    "$ref": "#/definitions/domain.EventReminder"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventReminder"
                 },
                 "time": {
                     "type": "string"
@@ -1831,7 +2437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ForgotPasswordRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.ForgotPasswordRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -1842,7 +2448,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.LoginRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -1857,7 +2463,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.LogoutRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.LogoutRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -1868,7 +2474,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.MarkAsReadRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.MarkAsReadRequest": {
             "type": "object",
             "required": [
                 "partner_id"
@@ -1879,7 +2485,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.MatchRequestListResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.MatchRequestListResponse": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -1888,7 +2494,7 @@ const docTemplate = `{
                 "match_requests": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.MatchRequestResponse"
+                        "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestResponse"
                     }
                 },
                 "page": {
@@ -1899,7 +2505,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.MatchRequestResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.MatchRequestResponse": {
             "type": "object",
             "properties": {
                 "anniversary_date": {
@@ -1933,14 +2539,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.MatchRequestStatus"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MatchRequestStatus"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "domain.MatchRequestStatus": {
+        "github_com_eralove_eralove-backend_internal_domain.MatchRequestStatus": {
             "type": "string",
             "enum": [
                 "pending",
@@ -1955,7 +2561,7 @@ const docTemplate = `{
                 "MatchRequestStatusIgnored"
             ]
         },
-        "domain.Message": {
+        "github_com_eralove_eralove-backend_internal_domain.Message": {
             "type": "object",
             "properties": {
                 "content": {
@@ -1991,7 +2597,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.MessageListResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.MessageListResponse": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -2000,7 +2606,7 @@ const docTemplate = `{
                 "messages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.MessageResponse"
+                        "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.MessageResponse"
                     }
                 },
                 "page": {
@@ -2011,7 +2617,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.MessageResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.MessageResponse": {
             "type": "object",
             "properties": {
                 "content": {
@@ -2040,7 +2646,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.PhotoListResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.PhotoListResponse": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -2052,7 +2658,7 @@ const docTemplate = `{
                 "photos": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.PhotoResponse"
+                        "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.PhotoResponse"
                     }
                 },
                 "total": {
@@ -2060,7 +2666,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.PhotoResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.PhotoResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2104,7 +2710,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.RefreshTokenRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.RefreshTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -2115,7 +2721,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ResendVerificationRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.ResendVerificationRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -2126,7 +2732,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ResetPasswordRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.ResetPasswordRequest": {
             "type": "object",
             "required": [
                 "new_password",
@@ -2142,7 +2748,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.RespondToMatchRequestRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.RespondToMatchRequestRequest": {
             "type": "object",
             "required": [
                 "action"
@@ -2157,7 +2763,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UpdateEventRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.UpdateEventRequest": {
             "type": "object",
             "properties": {
                 "date": {
@@ -2189,7 +2795,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reminder": {
-                    "$ref": "#/definitions/domain.EventReminder"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.EventReminder"
                 },
                 "time": {
                     "type": "string"
@@ -2201,11 +2807,11 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UpdatePhotoRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.UpdatePhotoRequest": {
             "type": "object",
             "properties": {
                 "date": {
-                    "type": "string"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.Date"
                 },
                 "description": {
                     "type": "string"
@@ -2232,14 +2838,14 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UpdateUserRequest": {
+        "github_com_eralove_eralove-backend_internal_domain.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "avatar": {
                     "type": "string"
                 },
                 "date_of_birth": {
-                    "type": "string"
+                    "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.Date"
                 },
                 "gender": {
                     "type": "string",
@@ -2259,7 +2865,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserResponse": {
+        "github_com_eralove_eralove-backend_internal_domain.UserResponse": {
             "type": "object",
             "properties": {
                 "anniversary_date": {
@@ -2303,23 +2909,20 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.ErrorResponse": {
+        "internal_handler.ErrorResponse": {
             "description": "Error response structure",
             "type": "object",
             "properties": {
+                "code": {
+                    "description": "Unique error code",
+                    "type": "integer",
+                    "example": 409001
+                },
                 "details": {
-                    "description": "Additional error details (optional)",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "name is required",
-                        "email is required"
-                    ]
+                    "description": "Additional error details (optional)"
                 },
                 "error": {
-                    "description": "Error code or type",
+                    "description": "Error type",
                     "type": "string",
                     "example": "validation_failed"
                 },
@@ -2327,10 +2930,15 @@ const docTemplate = `{
                     "description": "Human-readable error message",
                     "type": "string",
                     "example": "The provided data is invalid"
+                },
+                "trace_id": {
+                    "description": "Request trace ID",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },
-        "handler.LoginResponse": {
+        "internal_handler.LoginResponse": {
             "description": "Login response with user data and authentication tokens",
             "type": "object",
             "properties": {
@@ -2363,13 +2971,13 @@ const docTemplate = `{
                     "description": "User information",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/domain.UserResponse"
+                            "$ref": "#/definitions/github_com_eralove_eralove-backend_internal_domain.UserResponse"
                         }
                     ]
                 }
             }
         },
-        "handler.SuccessResponse": {
+        "internal_handler.SuccessResponse": {
             "description": "Success response structure",
             "type": "object",
             "properties": {
@@ -2385,6 +2993,34 @@ const docTemplate = `{
                     "description": "Success status",
                     "type": "boolean",
                     "example": true
+                },
+                "trace_id": {
+                    "description": "Request trace ID",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "internal_handler.UploadFileResponse": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_path": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }

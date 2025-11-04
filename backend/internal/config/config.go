@@ -14,9 +14,13 @@ type Config struct {
 	Environment string `env:"ENVIRONMENT" envDefault:"development"`
 	Port        string `env:"PORT" envDefault:"8080"`
 	
-	// Database
-	MongoURI      string `env:"MONGO_URI" envDefault:"mongodb://localhost:27017"`
-	DatabaseName  string `env:"DATABASE_NAME" envDefault:"eralove"`
+	// Database - PostgreSQL
+	PostgresHost     string `env:"POSTGRES_HOST" envDefault:"localhost"`
+	PostgresPort     string `env:"POSTGRES_PORT" envDefault:"5432"`
+	PostgresUser     string `env:"POSTGRES_USER" envDefault:"directus"`
+	PostgresPassword string `env:"POSTGRES_PASSWORD" envDefault:"directus123"`
+	PostgresDB       string `env:"POSTGRES_DB" envDefault:"directus"`
+	PostgresSSLMode  string `env:"POSTGRES_SSLMODE" envDefault:"disable"`
 	
 	// Redis
 	RedisAddr     string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
@@ -63,6 +67,12 @@ type Config struct {
 	StorageEndpoint     string `env:"STORAGE_ENDPOINT" envDefault:""`             // For MinIO or custom S3
 	StorageUseSSL       bool   `env:"STORAGE_USE_SSL" envDefault:"true"`
 	StorageBaseURL      string `env:"STORAGE_BASE_URL" envDefault:"http://localhost:8080"` // For public file access
+	
+	// Directus CMS Configuration
+	DirectusURL         string `env:"DIRECTUS_URL" envDefault:"http://localhost:8055"`
+	DirectusAdminEmail  string `env:"DIRECTUS_ADMIN_EMAIL" envDefault:"admin@eralove.com"`
+	DirectusAdminPass   string `env:"DIRECTUS_ADMIN_PASSWORD" envDefault:"Admin@123456"`
+	DirectusStaticToken string `env:"DIRECTUS_STATIC_TOKEN" envDefault:""`
 }
 
 // Load loads configuration from environment variables
@@ -92,8 +102,9 @@ func (c *Config) validate() error {
 		return fmt.Errorf("JWT_SECRET must be set in production")
 	}
 
-	if c.MongoURI == "" {
-		return fmt.Errorf("MONGO_URI is required")
+	// PostgreSQL is now the primary database
+	if c.PostgresHost == "" {
+		return fmt.Errorf("POSTGRES_HOST is required")
 	}
 
 	return nil

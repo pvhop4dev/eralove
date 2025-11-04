@@ -1,43 +1,43 @@
 package handler
 
 import (
-	"github.com/eralove/eralove-backend/internal/domain"
-	"github.com/eralove/eralove-backend/internal/infrastructure/i18n"
-	"github.com/go-playground/validator/v10"
+	"github.com/eralove/eralove-backend/internal/service"
 	"github.com/google/wire"
-	"go.uber.org/zap"
 )
 
 // HandlerSet provides all handler dependencies
 var HandlerSet = wire.NewSet(
-	ProvideUserHandler,
-	ProvidePhotoHandler,
-	ProvideUploadHandler,
+	// ProvideUserHandler,  // TODO: Reimplement with PostgreSQL
+	// ProvidePhotoHandler, // TODO: Reimplement with PostgreSQL
+	// ProvideUploadHandler, // TODO: Reimplement with PostgreSQL
+	ProvideCMSHandler,
 	// TODO: Uncomment when services are implemented
 	// ProvideEventHandler,
 	// ProvideMessageHandler,
 	// ProvideMatchRequestHandler,
 )
 
+// TODO: Reimplement UserHandler with PostgreSQL UUID
 // ProvideUserHandler provides a user handler
-func ProvideUserHandler(
-	userService domain.UserService,
-	validator *validator.Validate,
-	i18nService *i18n.I18n,
-	logger *zap.Logger,
-) *UserHandler {
-	return NewUserHandler(userService, validator, i18nService, logger)
-}
+// func ProvideUserHandler(
+// 	userService domain.UserService,
+// 	validator *validator.Validate,
+// 	i18nService *i18n.I18n,
+// 	logger *zap.Logger,
+// ) *UserHandler {
+// 	return NewUserHandler(userService, validator, i18nService, logger)
+// }
 
+// TODO: Reimplement PhotoHandler with PostgreSQL UUID
 // ProvidePhotoHandler provides a photo handler
-func ProvidePhotoHandler(
-	photoService domain.PhotoService,
-	validator *validator.Validate,
-	i18nService *i18n.I18n,
-	logger *zap.Logger,
-) *PhotoHandler {
-	return NewPhotoHandler(photoService, validator, i18nService, logger)
-}
+// func ProvidePhotoHandler(
+// 	photoService domain.PhotoService,
+// 	validator *validator.Validate,
+// 	i18nService *i18n.I18n,
+// 	logger *zap.Logger,
+// ) *PhotoHandler {
+// 	return NewPhotoHandler(photoService, validator, i18nService, logger)
+// }
 
 // TODO: Uncomment when services are implemented
 // // ProvideEventHandler provides an event handler
@@ -70,11 +70,17 @@ func ProvidePhotoHandler(
 // 	return NewMatchRequestHandler(matchRequestService, validator, i18nService, logger)
 // }
 
+// TODO: Reimplement UploadHandler with PostgreSQL UUID
 // ProvideUploadHandler provides an upload handler
-func ProvideUploadHandler(
-	storageService domain.StorageService,
-	i18nService *i18n.I18n,
-	logger *zap.Logger,
-) *UploadHandler {
-	return NewUploadHandler(storageService, i18nService, logger)
+// func ProvideUploadHandler(
+// 	storageService domain.StorageService,
+// 	i18nService *i18n.I18n,
+// 	logger *zap.Logger,
+// ) *UploadHandler {
+// 	return NewUploadHandler(storageService, i18nService, logger)
+// }
+
+// ProvideCMSHandler provides a CMS handler
+func ProvideCMSHandler(cmsService *service.CMSService) *CMSHandler {
+	return NewCMSHandler(cmsService)
 }

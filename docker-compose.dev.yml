@@ -1,29 +1,6 @@
 version: '3.8'
 
 services:
-  # MongoDB Database
-  mongodb:
-    image: mongo:7.0
-    container_name: eralove-mongodb-dev
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: eralove
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_dev_data:/data/db
-      - ./backend/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    networks:
-      - eralove-dev-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
   # Redis Cache
   redis:
     image: redis:7.2-alpine
@@ -41,6 +18,98 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # PostgreSQL Database for Directus & Application
+  postgres:
+    image: postgres:16-alpine
+    container_name: eralove-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: directus
+      POSTGRES_PASSWORD: directus123
+      POSTGRES_DB: directus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql:ro
+    networks:
+      - eralove-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U directus"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Directus CMS
+  directus:
+    image: directus/directus:latest
+    container_name: eralove-directus-dev
+    restart: unless-stopped
+    ports:
+      - "8055:8055"
+    volumes:
+      - directus_dev_uploads:/directus/uploads
+      - directus_dev_extensions:/directus/extensions
+    networks:
+      - eralove-dev-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      KEY: "255d861b-5ea1-5996-9aa3-922530ec40b1"
+      SECRET: "6116487b-cda1-52c2-b5b5-c8022c45e263"
+      
+      # Database
+      DB_CLIENT: "pg"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_DATABASE: "directus"
+      DB_USER: "directus"
+      DB_PASSWORD: "directus123"
+      
+      # Cache & Rate Limiting (disabled for now)
+      CACHE_ENABLED: "true"
+      CACHE_STORE: "memory"
+      
+      # Admin Account
+      ADMIN_EMAIL: "admin@eralove.com"
+      ADMIN_PASSWORD: "Admin@123456"
+      
+      # General
+      PUBLIC_URL: "http://localhost:8055"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "http://localhost:3000,http://localhost:5173,http://localhost:8080"
+      
+      # Storage (using MinIO)
+      STORAGE_LOCATIONS: "minio"
+      STORAGE_MINIO_DRIVER: "s3"
+      STORAGE_MINIO_KEY: "minioadmin"
+      STORAGE_MINIO_SECRET: "minioadmin123"
+      STORAGE_MINIO_BUCKET: "eralove-uploads"
+      STORAGE_MINIO_ENDPOINT: "http://minio:9000"
+      STORAGE_MINIO_REGION: "us-east-1"
+      
+      # Email (Optional)
+      EMAIL_FROM: "noreply@eralove.com"
+      EMAIL_TRANSPORT: "smtp"
+      EMAIL_SMTP_HOST: "smtp.gmail.com"
+      EMAIL_SMTP_PORT: "587"
+      EMAIL_SMTP_USER: ""
+      EMAIL_SMTP_PASSWORD: ""
+      
+      # Extensions
+      EXTENSIONS_AUTO_RELOAD: "true"
+      
+      # Logging
+      LOG_LEVEL: "debug"
+      LOG_STYLE: "pretty"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8055/server/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # MinIO Object Storage
   minio:
@@ -95,9 +164,10 @@ services:
     networks:
       - eralove-dev-network
     depends_on:
-      - mongodb
+      - postgres
       - redis
       - minio
+      - directus
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
@@ -107,11 +177,15 @@ services:
   # Note: Backend and Frontend run locally using Makefile commands for better development experience
 
 volumes:
-  mongodb_dev_data:
+  postgres_dev_data:
     driver: local
   redis_dev_data:
     driver: local
   minio_dev_data:
+    driver: local
+  directus_dev_uploads:
+    driver: local
+  directus_dev_extensions:
     driver: local
 
 networks:

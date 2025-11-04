@@ -17,28 +17,12 @@ var RepositorySet = wire.NewSet(
 	// ProvideMatchRequestRepository,
 )
 
-// ProvideUserRepository provides a user repository
-func ProvideUserRepository(db *database.MongoDB, logger *zap.Logger) domain.UserRepository {
-	return NewUserRepository(db.Database, logger)
+// ProvideUserRepository provides a user repository (PostgreSQL)
+func ProvideUserRepository(db *database.PostgresDB, logger *zap.Logger) domain.UserRepository {
+	return NewUserRepositoryPostgres(db, logger)
 }
 
-// ProvidePhotoRepository provides a photo repository
-func ProvidePhotoRepository(db *database.MongoDB, logger *zap.Logger) domain.PhotoRepository {
-	return NewPhotoRepository(db.Database, logger)
+// ProvidePhotoRepository provides a photo repository (PostgreSQL)
+func ProvidePhotoRepository(db *database.PostgresDB, logger *zap.Logger) domain.PhotoRepository {
+	return NewPhotoRepositoryPostgres(db, logger)
 }
-
-// TODO: Uncomment when repositories are implemented
-// // ProvideEventRepository provides an event repository
-// func ProvideEventRepository(db *database.MongoDB, logger *zap.Logger) domain.EventRepository {
-// 	return NewEventRepository(db.Database, logger)
-// }
-
-// // ProvideMessageRepository provides a message repository
-// func ProvideMessageRepository(db *database.MongoDB, logger *zap.Logger) domain.MessageRepository {
-// 	return NewMessageRepository(db.Database, logger)
-// }
-
-// // ProvideMatchRequestRepository provides a match request repository
-// func ProvideMatchRequestRepository(db *database.MongoDB, logger *zap.Logger) domain.MatchRequestRepository {
-// 	return NewMatchRequestRepository(db.Database, logger)
-// }

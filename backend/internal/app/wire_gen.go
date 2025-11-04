@@ -24,27 +24,13 @@ import (
 
 // InitializeApp creates a new application with all dependencies injected
 func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
-	mongoDB, err := infrastructure.ProvideMongoDB(cfg, logger)
+	client, err := infrastructure.ProvideDirectusClient(cfg, logger)
 	if err != nil {
 		return nil, err
 	}
-	userRepository := repository.ProvideUserRepository(mongoDB, logger)
-	passwordManager := infrastructure.ProvidePasswordManager()
-	jwtManager := infrastructure.ProvideJWTManager(cfg)
-	emailService := infrastructure.ProvideEmailService(cfg, logger)
-	userService := service.ProvideUserService(userRepository, passwordManager, jwtManager, emailService, logger)
-	validate := infrastructure.ProvideValidator()
-	i18n := infrastructure.ProvideI18n(logger)
-	userHandler := handler.ProvideUserHandler(userService, validate, i18n, logger)
-	photoRepository := repository.ProvidePhotoRepository(mongoDB, logger)
-	storageService, err := infrastructure.ProvideStorageService(cfg, logger)
-	if err != nil {
-		return nil, err
-	}
-	photoService := service.ProvidePhotoService(photoRepository, userRepository, storageService, logger)
-	photoHandler := handler.ProvidePhotoHandler(photoService, validate, i18n, logger)
-	uploadHandler := handler.ProvideUploadHandler(storageService, i18n, logger)
-	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler)
+	cmsService := service.ProvideCMSService(client)
+	cmsHandler := handler.ProvideCMSHandler(cmsService)
+	dependencies := ProvideDependencies(cmsHandler)
 	app, err := ProvideApp(cfg, logger, dependencies)
 	if err != nil {
 		return nil, err
@@ -61,15 +47,13 @@ var ApplicationSet = wire.NewSet(infrastructure.InfrastructureSet, repository.Re
 
 // ProvideDependencies creates the dependencies struct
 func ProvideDependencies(
-	userHandler *handler.UserHandler,
-	photoHandler *handler.PhotoHandler,
-	uploadHandler *handler.UploadHandler,
+
+	cmsHandler *handler.CMSHandler,
 
 ) *Dependencies {
 	return &Dependencies{
-		UserHandler:   userHandler,
-		PhotoHandler:  photoHandler,
-		UploadHandler: uploadHandler,
+
+		CMSHandler: cmsHandler,
 	}
 }
 

@@ -3,31 +3,31 @@ package domain
 import (
 	"context"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // User represents a user in the system
 type User struct {
-	ID                    primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Name                  string             `json:"name" bson:"name" validate:"required,min=2,max=100"`
-	Email                 string             `json:"email" bson:"email" validate:"required,email"`
-	PasswordHash          string             `json:"-" bson:"password_hash"`
-	DateOfBirth           *time.Time         `json:"date_of_birth,omitempty" bson:"date_of_birth,omitempty"`
-	Gender                string             `json:"gender,omitempty" bson:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	Avatar                string             `json:"avatar,omitempty" bson:"avatar,omitempty"`
-	PartnerID             *primitive.ObjectID `json:"partner_id,omitempty" bson:"partner_id,omitempty"`
-	PartnerName           string             `json:"partner_name,omitempty" bson:"partner_name,omitempty"`
-	AnniversaryDate       *time.Time         `json:"anniversary_date,omitempty" bson:"anniversary_date,omitempty"`
-	IsActive              bool               `json:"is_active" bson:"is_active"`
-	IsEmailVerified       bool               `json:"is_email_verified" bson:"is_email_verified"`
-	EmailVerificationToken string            `json:"-" bson:"email_verification_token,omitempty"`
-	EmailVerificationExpiry *time.Time       `json:"-" bson:"email_verification_expiry,omitempty"`
-	PasswordResetToken    string             `json:"-" bson:"password_reset_token,omitempty"`
-	PasswordResetExpiry   *time.Time         `json:"-" bson:"password_reset_expiry,omitempty"`
-	CreatedAt             time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt             time.Time          `json:"updated_at" bson:"updated_at"`
-	DeletedAt             *time.Time         `json:"-" bson:"deleted_at,omitempty"`
+	ID                    string     `json:"id" db:"id"`
+	Name                  string     `json:"name" db:"name" validate:"required,min=2,max=100"`
+	Email                 string     `json:"email" db:"email" validate:"required,email"`
+	PasswordHash          string     `json:"-" db:"password_hash"`
+	DateOfBirth           *time.Time `json:"date_of_birth,omitempty" db:"date_of_birth"`
+	Gender                string     `json:"gender,omitempty" db:"gender" validate:"omitempty,oneof=male female other"`
+	Avatar                string     `json:"avatar,omitempty" db:"avatar_url"`
+	AvatarURL             string     `json:"avatar_url,omitempty" db:"avatar_url"`
+	PartnerID             *string    `json:"partner_id,omitempty" db:"partner_id"`
+	PartnerName           string     `json:"partner_name,omitempty" db:"-"`
+	AnniversaryDate       *time.Time `json:"anniversary_date,omitempty" db:"-"`
+	IsActive              bool       `json:"is_active" db:"-"`
+	IsEmailVerified       bool       `json:"is_email_verified" db:"is_email_verified"`
+	EmailVerificationToken string    `json:"-" db:"email_verification_token"`
+	EmailVerificationExpiry *time.Time `json:"-" db:"email_verification_expires"`
+	PasswordResetToken    string     `json:"-" db:"password_reset_token"`
+	PasswordResetExpiry   *time.Time `json:"-" db:"password_reset_expires"`
+	Bio                   string     `json:"bio,omitempty" db:"bio"`
+	CreatedAt             time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at" db:"updated_at"`
+	DeletedAt             *time.Time `json:"-" db:"-"`
 }
 
 // CreateUserRequest represents the request to create a new user
@@ -57,19 +57,19 @@ type UpdateUserRequest struct {
 
 // UserResponse represents the user response (without sensitive data)
 type UserResponse struct {
-	ID              primitive.ObjectID `json:"id"`
-	Name            string             `json:"name"`
-	Email           string             `json:"email"`
-	DateOfBirth     *time.Time         `json:"date_of_birth,omitempty"`
-	Gender          string             `json:"gender,omitempty"`
-	Avatar          string             `json:"avatar,omitempty"`
-	PartnerID       *primitive.ObjectID `json:"partner_id,omitempty"`
-	PartnerName     string             `json:"partner_name,omitempty"`
-	AnniversaryDate *time.Time         `json:"anniversary_date,omitempty"`
-	IsActive        bool               `json:"is_active"`
-	IsEmailVerified bool               `json:"is_email_verified"`
-	CreatedAt       time.Time          `json:"created_at"`
-	UpdatedAt       time.Time          `json:"updated_at"`
+	ID              string     `json:"id"`
+	Name            string     `json:"name"`
+	Email           string     `json:"email"`
+	DateOfBirth     *time.Time `json:"date_of_birth,omitempty"`
+	Gender          string     `json:"gender,omitempty"`
+	Avatar          string     `json:"avatar,omitempty"`
+	PartnerID       *string    `json:"partner_id,omitempty"`
+	PartnerName     string     `json:"partner_name,omitempty"`
+	AnniversaryDate *time.Time `json:"anniversary_date,omitempty"`
+	IsActive        bool       `json:"is_active"`
+	IsEmailVerified bool       `json:"is_email_verified"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }
 
 // ToResponse converts User to UserResponse
@@ -94,18 +94,11 @@ func (u *User) ToResponse() *UserResponse {
 // UserRepository defines the interface for user data access
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
-	GetByID(ctx context.Context, id primitive.ObjectID) (*User, error)
-	GetByEmail(ctx context.Context, email string) (*User, error)
-	GetByEmailVerificationToken(ctx context.Context, token string) (*User, error)
-	GetByPasswordResetToken(ctx context.Context, token string) (*User, error)
-	Update(ctx context.Context, id primitive.ObjectID, user *User) error
-	Delete(ctx context.Context, id primitive.ObjectID) error
-	List(ctx context.Context, limit, offset int) ([]*User, error)
-	
-	// Soft delete management
-	Restore(ctx context.Context, id primitive.ObjectID) error
-	HardDelete(ctx context.Context, id primitive.ObjectID) error
-	ListDeleted(ctx context.Context, limit, offset int) ([]*User, error)
+	FindByID(ctx context.Context, id string) (*User, error)
+	FindByEmail(ctx context.Context, email string) (*User, error)
+	Update(ctx context.Context, user *User) error
+	Delete(ctx context.Context, id string) error
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
 }
 
 // RefreshTokenRequest represents the request to refresh token
@@ -147,9 +140,9 @@ type UserService interface {
 	Login(ctx context.Context, req *LoginRequest) (*UserResponse, *TokenPair, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*TokenPair, *UserResponse, error)
 	Logout(ctx context.Context, refreshToken string) error
-	GetProfile(ctx context.Context, userID primitive.ObjectID) (*UserResponse, error)
-	UpdateProfile(ctx context.Context, userID primitive.ObjectID, req *UpdateUserRequest) (*UserResponse, error)
-	DeleteAccount(ctx context.Context, userID primitive.ObjectID) error
+	GetProfile(ctx context.Context, userID string) (*UserResponse, error)
+	UpdateProfile(ctx context.Context, userID string, req *UpdateUserRequest) (*UserResponse, error)
+	DeleteAccount(ctx context.Context, userID string) error
 	
 	// Email verification
 	VerifyEmail(ctx context.Context, req *EmailVerificationRequest) error

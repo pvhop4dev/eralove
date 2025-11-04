@@ -1,43 +1,43 @@
 package service
 
 import (
-	"github.com/eralove/eralove-backend/internal/domain"
-	"github.com/eralove/eralove-backend/internal/infrastructure/auth"
-	"github.com/eralove/eralove-backend/internal/infrastructure/email"
+	"github.com/eralove/eralove-backend/internal/infrastructure/directus"
 	"github.com/google/wire"
-	"go.uber.org/zap"
 )
 
 // ServiceSet provides all service dependencies
 var ServiceSet = wire.NewSet(
-	ProvideUserService,
-	ProvidePhotoService,
+	// ProvideUserService,  // TODO: Reimplement with PostgreSQL
+	// ProvidePhotoService, // TODO: Reimplement with PostgreSQL
+	ProvideCMSService,
 	// TODO: Uncomment when services are fully implemented
 	// ProvideEventService,
 	// ProvideMessageService,
 	// ProvideMatchRequestService,
 )
 
+// TODO: Reimplement UserService with PostgreSQL UUID
 // ProvideUserService provides a user service
-func ProvideUserService(
-	userRepo domain.UserRepository,
-	passwordManager *auth.PasswordManager,
-	jwtManager *auth.JWTManager,
-	emailService *email.EmailService,
-	logger *zap.Logger,
-) domain.UserService {
-	return NewUserService(userRepo, passwordManager, jwtManager, emailService, logger)
-}
+// func ProvideUserService(
+// 	userRepo domain.UserRepository,
+// 	passwordManager *auth.PasswordManager,
+// 	jwtManager *auth.JWTManager,
+// 	emailService *email.EmailService,
+// 	logger *zap.Logger,
+// ) domain.UserService {
+// 	return NewUserService(userRepo, passwordManager, jwtManager, emailService, logger)
+// }
 
+// TODO: Reimplement PhotoService with PostgreSQL UUID
 // ProvidePhotoService provides a photo service
-func ProvidePhotoService(
-	photoRepo domain.PhotoRepository,
-	userRepo domain.UserRepository,
-	storageService domain.StorageService,
-	logger *zap.Logger,
-) domain.PhotoService {
-	return NewPhotoService(photoRepo, userRepo, storageService, logger)
-}
+// func ProvidePhotoService(
+// 	photoRepo domain.PhotoRepository,
+// 	userRepo domain.UserRepository,
+// 	storageService domain.StorageService,
+// 	logger *zap.Logger,
+// ) domain.PhotoService {
+// 	return NewPhotoService(photoRepo, userRepo, storageService, logger)
+// }
 
 // TODO: Uncomment when services are fully implemented
 // // ProvideEventService provides an event service
@@ -63,3 +63,8 @@ func ProvidePhotoService(
 // ) domain.MatchRequestService {
 // 	return NewMatchRequestService(matchRequestRepo, logger)
 // }
+
+// ProvideCMSService provides a CMS service
+func ProvideCMSService(directusClient *directus.Client) *CMSService {
+	return NewCMSService(directusClient)
+}

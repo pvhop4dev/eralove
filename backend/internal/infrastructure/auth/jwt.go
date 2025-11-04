@@ -7,23 +7,22 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // JWTClaims represents the JWT claims
 type JWTClaims struct {
-	UserID    primitive.ObjectID `json:"user_id"`
-	Email     string             `json:"email"`
-	Name      string             `json:"name"`
-	TokenType string             `json:"token_type"` // "access" or "refresh"
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	TokenType string `json:"token_type"` // "access" or "refresh"
 	jwt.RegisteredClaims
 }
 
 // JWTManager handles JWT operations
 type JWTManager struct {
-	secretKey            string
-	accessExpiration     time.Duration
-	refreshExpiration    time.Duration
+	secretKey         string
+	accessExpiration  time.Duration
+	refreshExpiration time.Duration
 }
 
 // NewJWTManager creates a new JWT manager
@@ -44,7 +43,7 @@ type TokenPair struct {
 }
 
 // GenerateTokenPair generates both access and refresh tokens
-func (j *JWTManager) GenerateTokenPair(userID primitive.ObjectID, email, name string) (*TokenPair, error) {
+func (j *JWTManager) GenerateTokenPair(userID string, email, name string) (*TokenPair, error) {
 	// Generate access token
 	accessToken, err := j.generateToken(userID, email, name, "access", j.accessExpiration)
 	if err != nil {
@@ -66,12 +65,12 @@ func (j *JWTManager) GenerateTokenPair(userID primitive.ObjectID, email, name st
 }
 
 // GenerateToken generates a new JWT access token (for backward compatibility)
-func (j *JWTManager) GenerateToken(userID primitive.ObjectID, email, name string) (string, error) {
+func (j *JWTManager) GenerateToken(userID string, email, name string) (string, error) {
 	return j.generateToken(userID, email, name, "access", j.accessExpiration)
 }
 
 // generateToken generates a JWT token with specified type and expiration
-func (j *JWTManager) generateToken(userID primitive.ObjectID, email, name, tokenType string, expiration time.Duration) (string, error) {
+func (j *JWTManager) generateToken(userID string, email, name, tokenType string, expiration time.Duration) (string, error) {
 	claims := &JWTClaims{
 		UserID:    userID,
 		Email:     email,
@@ -82,7 +81,7 @@ func (j *JWTManager) generateToken(userID primitive.ObjectID, email, name, token
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "eralove-api",
-			Subject:   userID.Hex(),
+			Subject:   userID,
 		},
 	}
 
@@ -179,17 +178,17 @@ func (j *JWTManager) ValidateRefreshToken(tokenString string) (*JWTClaims, error
 }
 
 // GetUserIDFromToken extracts user ID from token
-func (j *JWTManager) GetUserIDFromToken(tokenString string) (primitive.ObjectID, error) {
+func (j *JWTManager) GetUserIDFromToken(tokenString string) (string, error) {
 	claims, err := j.ValidateToken(tokenString)
 	if err != nil {
-		return primitive.NilObjectID, err
+		return "", err
 	}
 
 	return claims.UserID, nil
 }
 
 // GenerateRefreshToken generates a new JWT refresh token
-func (j *JWTManager) GenerateRefreshToken(userID primitive.ObjectID, email, name string) (string, error) {
+func (j *JWTManager) GenerateRefreshToken(userID string, email, name string) (string, error) {
 	return j.generateToken(userID, email, name, "refresh", j.refreshExpiration)
 }
 
