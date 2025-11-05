@@ -8,6 +8,7 @@ package app
 
 import (
 	"github.com/eralove/eralove-backend/internal/config"
+	"github.com/eralove/eralove-backend/internal/domain"
 	"github.com/eralove/eralove-backend/internal/handler"
 	"github.com/eralove/eralove-backend/internal/infrastructure"
 	"github.com/eralove/eralove-backend/internal/repository"
@@ -44,7 +45,7 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	photoService := service.ProvidePhotoService(photoRepository, userRepository, storageService, logger)
 	photoHandler := handler.ProvidePhotoHandler(photoService, validate, i18n, logger)
 	uploadHandler := handler.ProvideUploadHandler(storageService, i18n, logger)
-	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler)
+	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler, storageService)
 	app, err := ProvideApp(cfg, logger, dependencies)
 	if err != nil {
 		return nil, err
@@ -64,12 +65,13 @@ func ProvideDependencies(
 	userHandler *handler.UserHandler,
 	photoHandler *handler.PhotoHandler,
 	uploadHandler *handler.UploadHandler,
-
+	storageService domain.StorageService,
 ) *Dependencies {
 	return &Dependencies{
-		UserHandler:   userHandler,
-		PhotoHandler:  photoHandler,
-		UploadHandler: uploadHandler,
+		UserHandler:    userHandler,
+		PhotoHandler:   photoHandler,
+		UploadHandler:  uploadHandler,
+		StorageService: storageService,
 	}
 }
 

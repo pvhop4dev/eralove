@@ -65,7 +65,6 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 				File:        src,
 				Filename:    fileHeader.Filename,
 				ContentType: fileHeader.Header.Get("Content-Type"),
-				Size:        fileHeader.Size,
 				Folder:      "photos",
 				UserID:      userID.Hex(),
 			}
@@ -76,7 +75,9 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 				return nil, fmt.Errorf("failed to upload file")
 			}
 
-			imageURL = fileInfo.URL
+			// Store the MinIO key (not the full URL) so backend can proxy it
+			// Key format: "photos/userid/filename.jpg"
+			imageURL = fileInfo.Key
 			s.logger.Info("File uploaded successfully", 
 				zap.String("key", fileInfo.Key),
 				zap.String("url", fileInfo.URL))

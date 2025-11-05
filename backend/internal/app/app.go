@@ -3,11 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
-	"strings"
-
 	"github.com/eralove/eralove-backend/internal/config"
+	"github.com/eralove/eralove-backend/internal/domain"
 	"github.com/eralove/eralove-backend/internal/handler"
 	"github.com/eralove/eralove-backend/internal/infrastructure/auth"
 	"github.com/eralove/eralove-backend/internal/infrastructure/cache"
@@ -48,6 +48,7 @@ type Dependencies struct {
 	MessageHandler      *handler.MessageHandler
 	MatchRequestHandler *handler.MatchRequestHandler
 	UploadHandler       *handler.UploadHandler
+	StorageService      domain.StorageService
 }
 
 // NewWithDependencies creates a new application instance with injected dependencies
@@ -332,10 +333,6 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	// Swagger documentation
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	// Static file serving for uploaded files (public access - no auth required)
-	// Register at app level to completely bypass all middleware
-	app.Static("/api/v1/files", "./uploads")
-
 	// API routes
 	api := app.Group("/api/v1")
 
@@ -351,6 +348,37 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	protected := api.Group("")
 	protected.Use(jwtMiddleware(jwtManager, logger))
 
+	// File proxy handler - proxies requests to MinIO with authentication
+	// This allows frontend to fetch files through our backend with JWT auth
+	protected.Get("/files/*", func(c *fiber.Ctx) error {
+		// Get the file key from the URL (e.g., "photos/userid_timestamp.jpg")
+		fileKey := c.Params("*")
+		
+		logger.Info("File proxy request",
+			zap.String("file_key", fileKey),
+			zap.String("user_id", c.Locals("user_id").(primitive.ObjectID).Hex()))
+		
+		// Generate presigned download URL from MinIO (valid for 1 hour)
+		ctx := c.Context()
+		downloadURL, err := deps.StorageService.Download(ctx, &domain.DownloadRequest{
+			Key:    fileKey,
+			Expiry: 1 * time.Hour,
+		})
+		if err != nil {
+			logger.Error("Failed to generate download URL", zap.Error(err), zap.String("key", fileKey))
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to access file",
+			})
+		}
+		
+		logger.Info("Generated presigned URL", 
+			zap.String("key", fileKey),
+			zap.String("presigned_url", downloadURL))
+		
+		// Redirect to the presigned URL
+		return c.Redirect(downloadURL, fiber.StatusTemporaryRedirect)
+	})
+
 	// User routes
 	users := protected.Group("/users")
 	users.Get("/profile", deps.UserHandler.GetProfile)
@@ -359,6 +387,44 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 
 	// Photo routes (when handlers are available)
 	photos := protected.Group("/photos")
+	
+	// Get presigned upload URL - frontend uploads directly to MinIO
+	photos.Post("/presigned-upload", func(c *fiber.Ctx) error {
+		userID := c.Locals("user_id").(primitive.ObjectID)
+		
+		// Parse request
+		var req struct {
+			Filename string `json:"filename"`
+		}
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid request",
+			})
+		}
+		
+		// Generate unique key for the file
+		key := fmt.Sprintf("photos/%s/%s", userID.Hex(), req.Filename)
+		
+		// Generate presigned upload URL (valid for 15 minutes)
+		ctx := c.Context()
+		uploadURL, err := deps.StorageService.GeneratePresignedUploadURL(ctx, key, "image/jpeg", 15*time.Minute)
+		if err != nil {
+			logger.Error("Failed to generate presigned upload URL", zap.Error(err))
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to generate upload URL",
+			})
+		}
+		
+		logger.Info("Generated presigned upload URL",
+			zap.String("key", key),
+			zap.String("user_id", userID.Hex()))
+		
+		return c.JSON(fiber.Map{
+			"upload_url": uploadURL,
+			"key":        key,
+		})
+	})
+	
 	photos.Post("/", deps.PhotoHandler.CreatePhoto)
 	photos.Get("/", deps.PhotoHandler.GetPhotos)
 	photos.Get("/:id", deps.PhotoHandler.GetPhoto)

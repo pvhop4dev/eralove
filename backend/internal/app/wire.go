@@ -5,6 +5,7 @@ package app
 
 import (
 	"github.com/eralove/eralove-backend/internal/config"
+	"github.com/eralove/eralove-backend/internal/domain"
 	"github.com/eralove/eralove-backend/internal/handler"
 	"github.com/eralove/eralove-backend/internal/infrastructure"
 	"github.com/eralove/eralove-backend/internal/repository"
@@ -35,15 +36,17 @@ func ProvideDependencies(
 	userHandler *handler.UserHandler,
 	photoHandler *handler.PhotoHandler,
 	uploadHandler *handler.UploadHandler,
+	storageService domain.StorageService,
 	// TODO: Add when implemented
 	// eventHandler *handler.EventHandler,
 	// messageHandler *handler.MessageHandler,
 	// matchRequestHandler *handler.MatchRequestHandler,
 ) *Dependencies {
 	return &Dependencies{
-		UserHandler:   userHandler,
-		PhotoHandler:  photoHandler,
-		UploadHandler: uploadHandler,
+		UserHandler:    userHandler,
+		PhotoHandler:   photoHandler,
+		UploadHandler:  uploadHandler,
+		StorageService: storageService,
 		// TODO: Add when implemented
 		// EventHandler:        eventHandler,
 		// MessageHandler:      messageHandler,
