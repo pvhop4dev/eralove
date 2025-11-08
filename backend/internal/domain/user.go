@@ -18,6 +18,8 @@ type User struct {
 	Avatar                string             `json:"avatar,omitempty" bson:"avatar,omitempty"`
 	PartnerID             *primitive.ObjectID `json:"partner_id,omitempty" bson:"partner_id,omitempty"`
 	PartnerName           string             `json:"partner_name,omitempty" bson:"partner_name,omitempty"`
+	MatchCode             string             `json:"match_code,omitempty" bson:"match_code,omitempty"`
+	MatchedAt             *time.Time         `json:"matched_at,omitempty" bson:"matched_at,omitempty"`
 	AnniversaryDate       *time.Time         `json:"anniversary_date,omitempty" bson:"anniversary_date,omitempty"`
 	IsActive              bool               `json:"is_active" bson:"is_active"`
 	IsEmailVerified       bool               `json:"is_email_verified" bson:"is_email_verified"`
@@ -48,11 +50,12 @@ type LoginRequest struct {
 
 // UpdateUserRequest represents the request to update user information
 type UpdateUserRequest struct {
-	Name        string  `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
-	DateOfBirth *Date   `json:"date_of_birth,omitempty"`
-	Gender      string  `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
-	Avatar      string  `json:"avatar,omitempty"`
-	PartnerName string  `json:"partner_name,omitempty"`
+	Name            string  `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
+	DateOfBirth     *Date   `json:"date_of_birth,omitempty"`
+	Gender          string  `json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
+	Avatar          string  `json:"avatar,omitempty"`
+	PartnerName     string  `json:"partner_name,omitempty"`
+	AnniversaryDate *Date   `json:"anniversary_date,omitempty"` // Allow updating anniversary date
 }
 
 // UserResponse represents the user response (without sensitive data)
@@ -65,6 +68,8 @@ type UserResponse struct {
 	Avatar          string             `json:"avatar,omitempty"`
 	PartnerID       *primitive.ObjectID `json:"partner_id,omitempty"`
 	PartnerName     string             `json:"partner_name,omitempty"`
+	MatchCode       string             `json:"match_code,omitempty"`
+	MatchedAt       *time.Time         `json:"matched_at,omitempty"`
 	AnniversaryDate *time.Time         `json:"anniversary_date,omitempty"`
 	IsActive        bool               `json:"is_active"`
 	IsEmailVerified bool               `json:"is_email_verified"`
@@ -83,6 +88,8 @@ func (u *User) ToResponse() *UserResponse {
 		Avatar:          u.Avatar,
 		PartnerID:       u.PartnerID,
 		PartnerName:     u.PartnerName,
+		MatchCode:       u.MatchCode,
+		MatchedAt:       u.MatchedAt,
 		AnniversaryDate: u.AnniversaryDate,
 		IsActive:        u.IsActive,
 		IsEmailVerified: u.IsEmailVerified,
@@ -158,6 +165,9 @@ type UserService interface {
 	// Password reset
 	ForgotPassword(ctx context.Context, req *ForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *ResetPasswordRequest) error
+	
+	// Match management
+	UnmatchPartner(ctx context.Context, userID primitive.ObjectID) error
 }
 
 // TokenPair represents access and refresh token pair

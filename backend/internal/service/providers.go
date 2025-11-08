@@ -12,21 +12,23 @@ import (
 var ServiceSet = wire.NewSet(
 	ProvideUserService,
 	ProvidePhotoService,
+	ProvideEventService,
+	ProvideMatchRequestService,
 	// TODO: Uncomment when services are fully implemented
-	// ProvideEventService,
 	// ProvideMessageService,
-	// ProvideMatchRequestService,
 )
 
 // ProvideUserService provides a user service
 func ProvideUserService(
 	userRepo domain.UserRepository,
+	eventRepo domain.EventRepository,
+	photoRepo domain.PhotoRepository,
 	passwordManager *auth.PasswordManager,
 	jwtManager *auth.JWTManager,
 	emailService *email.EmailService,
 	logger *zap.Logger,
 ) domain.UserService {
-	return NewUserService(userRepo, passwordManager, jwtManager, emailService, logger)
+	return NewUserService(userRepo, eventRepo, photoRepo, passwordManager, jwtManager, emailService, logger)
 }
 
 // ProvidePhotoService provides a photo service
@@ -39,16 +41,16 @@ func ProvidePhotoService(
 	return NewPhotoService(photoRepo, userRepo, storageService, logger)
 }
 
-// TODO: Uncomment when services are fully implemented
-// // ProvideEventService provides an event service
-// func ProvideEventService(
-// 	eventRepo domain.EventRepository,
-// 	logger *zap.Logger,
-// ) domain.EventService {
-// 	return NewEventService(eventRepo, logger)
-// }
+// ProvideEventService provides an event service
+func ProvideEventService(
+	eventRepo domain.EventRepository,
+	userRepo domain.UserRepository,
+	logger *zap.Logger,
+) domain.EventService {
+	return NewEventService(eventRepo, userRepo, logger)
+}
 
-// // ProvideMessageService provides a message service
+// ProvideMessageService provides a message service
 // func ProvideMessageService(
 // 	messageRepo domain.MessageRepository,
 // 	logger *zap.Logger,
@@ -56,10 +58,11 @@ func ProvidePhotoService(
 // 	return NewMessageService(messageRepo, logger)
 // }
 
-// // ProvideMatchRequestService provides a match request service
-// func ProvideMatchRequestService(
-// 	matchRequestRepo domain.MatchRequestRepository,
-// 	logger *zap.Logger,
-// ) domain.MatchRequestService {
-// 	return NewMatchRequestService(matchRequestRepo, logger)
-// }
+// ProvideMatchRequestService provides a match request service
+func ProvideMatchRequestService(
+	matchRequestRepo domain.MatchRequestRepository,
+	userRepo domain.UserRepository,
+	logger *zap.Logger,
+) domain.MatchRequestService {
+	return NewMatchRequestService(matchRequestRepo, userRepo, logger)
+}

@@ -24,7 +24,6 @@ var ApplicationSet = wire.NewSet(
 	ProvideApp,
 )
 
-
 // InitializeApp creates a new application with all dependencies injected
 func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	wire.Build(ApplicationSet)
@@ -37,20 +36,20 @@ func ProvideDependencies(
 	photoHandler *handler.PhotoHandler,
 	uploadHandler *handler.UploadHandler,
 	storageService domain.StorageService,
+	eventHandler *handler.EventHandler,
+	matchRequestHandler *handler.MatchRequestHandler,
 	// TODO: Add when implemented
-	// eventHandler *handler.EventHandler,
 	// messageHandler *handler.MessageHandler,
-	// matchRequestHandler *handler.MatchRequestHandler,
 ) *Dependencies {
 	return &Dependencies{
-		UserHandler:    userHandler,
-		PhotoHandler:   photoHandler,
-		UploadHandler:  uploadHandler,
-		StorageService: storageService,
+		UserHandler:         userHandler,
+		PhotoHandler:        photoHandler,
+		UploadHandler:       uploadHandler,
+		StorageService:      storageService,
+		EventHandler:        eventHandler,
+		MatchRequestHandler: matchRequestHandler,
 		// TODO: Add when implemented
-		// EventHandler:        eventHandler,
-		// MessageHandler:      messageHandler,
-		// MatchRequestHandler: matchRequestHandler,
+		// MessageHandler: messageHandler,
 	}
 }
 

@@ -12,11 +12,11 @@ import (
 var HandlerSet = wire.NewSet(
 	ProvideUserHandler,
 	ProvidePhotoHandler,
+	ProvideEventHandler,
+	ProvideMatchRequestHandler,
 	ProvideUploadHandler,
 	// TODO: Uncomment when services are implemented
-	// ProvideEventHandler,
 	// ProvideMessageHandler,
-	// ProvideMatchRequestHandler,
 )
 
 // ProvideUserHandler provides a user handler
@@ -39,16 +39,15 @@ func ProvidePhotoHandler(
 	return NewPhotoHandler(photoService, validator, i18nService, logger)
 }
 
-// TODO: Uncomment when services are implemented
-// // ProvideEventHandler provides an event handler
-// func ProvideEventHandler(
-// 	eventService domain.EventService,
-// 	validator *validator.Validate,
-// 	i18nService *i18n.I18n,
-// 	logger *zap.Logger,
-// ) *EventHandler {
-// 	return NewEventHandler(eventService, validator, i18nService, logger)
-// }
+// ProvideEventHandler provides an event handler
+func ProvideEventHandler(
+	eventService domain.EventService,
+	validator *validator.Validate,
+	i18nService *i18n.I18n,
+	logger *zap.Logger,
+) *EventHandler {
+	return NewEventHandler(eventService, validator, i18nService, logger)
+}
 
 // // ProvideMessageHandler provides a message handler
 // func ProvideMessageHandler(
@@ -60,15 +59,15 @@ func ProvidePhotoHandler(
 // 	return NewMessageHandler(messageService, validator, i18nService, logger)
 // }
 
-// // ProvideMatchRequestHandler provides a match request handler
-// func ProvideMatchRequestHandler(
-// 	matchRequestService domain.MatchRequestService,
-// 	validator *validator.Validate,
-// 	i18nService *i18n.I18n,
-// 	logger *zap.Logger,
-// ) *MatchRequestHandler {
-// 	return NewMatchRequestHandler(matchRequestService, validator, i18nService, logger)
-// }
+// ProvideMatchRequestHandler provides a match request handler
+func ProvideMatchRequestHandler(
+	matchRequestService domain.MatchRequestService,
+	validator *validator.Validate,
+	i18nService *i18n.I18n,
+	logger *zap.Logger,
+) *MatchRequestHandler {
+	return NewMatchRequestHandler(matchRequestService, validator, i18nService, logger)
+}
 
 // ProvideUploadHandler provides an upload handler
 func ProvideUploadHandler(

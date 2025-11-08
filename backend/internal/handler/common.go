@@ -8,8 +8,22 @@ import (
 
 // getUserIDFromContext extracts user ID from fiber context
 func getUserIDFromContext(c *fiber.Ctx) primitive.ObjectID {
-	userID := c.Locals("user_id").(primitive.ObjectID)
-	return userID
+	userIDVal := c.Locals("user_id")
+	
+	// Try direct type assertion first
+	if userID, ok := userIDVal.(primitive.ObjectID); ok {
+		return userID
+	}
+	
+	// Try string conversion
+	if userIDStr, ok := userIDVal.(string); ok {
+		if objectID, err := primitive.ObjectIDFromHex(userIDStr); err == nil {
+			return objectID
+		}
+	}
+	
+	// Return empty ObjectID if conversion fails
+	return primitive.ObjectID{}
 }
 
 // ErrorResponse represents an error response

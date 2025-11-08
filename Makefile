@@ -30,7 +30,7 @@ infra-up: ## Start infrastructure services (MongoDB, Redis, MinIO, Nginx)
 	@echo "Starting infrastructure services..."
 	docker-compose up -d
 	@echo "Waiting for services to be healthy..."
-	@sleep 5
+	@ping 127.0.0.1 -n 6 >nul 2>&1
 	@echo "Infrastructure ready!"
 	@echo "  - MongoDB: localhost:27017"
 	@echo "  - Redis: localhost:6379"

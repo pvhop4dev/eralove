@@ -82,8 +82,10 @@ func (m *MinIOStorage) Upload(ctx context.Context, req *domain.UploadRequest) (*
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
-	// Generate public URL
-	url := m.generatePublicURL(key)
+	// Return relative path instead of direct MinIO URL
+	// Frontend will construct: http://localhost:8080/api/v1/files/{key}
+	// This ensures files go through backend proxy with authentication
+	url := key
 
 	fileInfo := &domain.FileInfo{
 		Key:         key,

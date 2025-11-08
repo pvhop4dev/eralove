@@ -30,14 +30,15 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 		return nil, err
 	}
 	userRepository := repository.ProvideUserRepository(mongoDB, logger)
+	eventRepository := repository.ProvideEventRepository(mongoDB, logger)
+	photoRepository := repository.ProvidePhotoRepository(mongoDB, logger)
 	passwordManager := infrastructure.ProvidePasswordManager()
 	jwtManager := infrastructure.ProvideJWTManager(cfg)
 	emailService := infrastructure.ProvideEmailService(cfg, logger)
-	userService := service.ProvideUserService(userRepository, passwordManager, jwtManager, emailService, logger)
+	userService := service.ProvideUserService(userRepository, eventRepository, photoRepository, passwordManager, jwtManager, emailService, logger)
 	validate := infrastructure.ProvideValidator()
 	i18n := infrastructure.ProvideI18n(logger)
 	userHandler := handler.ProvideUserHandler(userService, validate, i18n, logger)
-	photoRepository := repository.ProvidePhotoRepository(mongoDB, logger)
 	storageService, err := infrastructure.ProvideStorageService(cfg, logger)
 	if err != nil {
 		return nil, err
@@ -45,7 +46,12 @@ func InitializeApp(cfg *config.Config, logger *zap.Logger) (*App, error) {
 	photoService := service.ProvidePhotoService(photoRepository, userRepository, storageService, logger)
 	photoHandler := handler.ProvidePhotoHandler(photoService, validate, i18n, logger)
 	uploadHandler := handler.ProvideUploadHandler(storageService, i18n, logger)
-	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler, storageService)
+	eventService := service.ProvideEventService(eventRepository, userRepository, logger)
+	eventHandler := handler.ProvideEventHandler(eventService, validate, i18n, logger)
+	matchRequestRepository := repository.ProvideMatchRequestRepository(mongoDB, logger)
+	matchRequestService := service.ProvideMatchRequestService(matchRequestRepository, userRepository, logger)
+	matchRequestHandler := handler.ProvideMatchRequestHandler(matchRequestService, validate, i18n, logger)
+	dependencies := ProvideDependencies(userHandler, photoHandler, uploadHandler, storageService, eventHandler, matchRequestHandler)
 	app, err := ProvideApp(cfg, logger, dependencies)
 	if err != nil {
 		return nil, err
@@ -66,12 +72,17 @@ func ProvideDependencies(
 	photoHandler *handler.PhotoHandler,
 	uploadHandler *handler.UploadHandler,
 	storageService domain.StorageService,
+	eventHandler *handler.EventHandler,
+	matchRequestHandler *handler.MatchRequestHandler,
+
 ) *Dependencies {
 	return &Dependencies{
-		UserHandler:    userHandler,
-		PhotoHandler:   photoHandler,
-		UploadHandler:  uploadHandler,
-		StorageService: storageService,
+		UserHandler:         userHandler,
+		PhotoHandler:        photoHandler,
+		UploadHandler:       uploadHandler,
+		StorageService:      storageService,
+		EventHandler:        eventHandler,
+		MatchRequestHandler: matchRequestHandler,
 	}
 }
 

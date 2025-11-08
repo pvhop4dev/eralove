@@ -13,23 +13,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// PhotoRepository implements domain.PhotoRepository
-type PhotoRepository struct {
+// PhotoRepositoryNew implements domain.PhotoRepository with MatchCode
+type PhotoRepositoryNew struct {
 	collection *mongo.Collection
 	logger     *zap.Logger
 }
 
-// NewPhotoRepository creates a new photo repository
-func NewPhotoRepository(db *mongo.Database, logger *zap.Logger) domain.PhotoRepository {
-	return &PhotoRepository{
+// NewPhotoRepositoryWithMatchCode creates a new photo repository
+func NewPhotoRepositoryWithMatchCode(db *mongo.Database, logger *zap.Logger) domain.PhotoRepository {
+	return &PhotoRepositoryNew{
 		collection: db.Collection("photos"),
 		logger:     logger,
 	}
 }
 
 // Create creates a new photo
-func (r *PhotoRepository) Create(ctx context.Context, photo *domain.Photo) error {
-
+func (r *PhotoRepositoryNew) Create(ctx context.Context, photo *domain.Photo) error {
 	photo.CreatedAt = time.Now()
 	photo.UpdatedAt = time.Now()
 
@@ -44,9 +43,12 @@ func (r *PhotoRepository) Create(ctx context.Context, photo *domain.Photo) error
 }
 
 // GetByID retrieves a photo by ID
-func (r *PhotoRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Photo, error) {
+func (r *PhotoRepositoryNew) GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Photo, error) {
 	var photo domain.Photo
-	filter := SoftDelete.GetActiveFilterByID(id)
+	filter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
+	}
 	
 	err := r.collection.FindOne(ctx, filter).Decode(&photo)
 	if err != nil {
@@ -60,54 +62,21 @@ func (r *PhotoRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*
 	return &photo, nil
 }
 
-// GetByUserID retrieves photos by user ID with pagination
-func (r *PhotoRepository) GetByUserID(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*domain.Photo, error) {
+// GetByMatchCode retrieves photos by match code with pagination
+func (r *PhotoRepositoryNew) GetByMatchCode(ctx context.Context, matchCode string, limit, offset int) ([]*domain.Photo, error) {
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "date", Value: -1}})
 
-	filter := SoftDelete.GetActiveFilterByUserID(userID)
-	cursor, err := r.collection.Find(ctx, filter, opts)
-	if err != nil {
-		r.logger.Error("Failed to get photos by user ID", zap.Error(err), zap.String("user_id", userID.Hex()))
-		return nil, fmt.Errorf("failed to get photos: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var photos []*domain.Photo
-	if err := cursor.All(ctx, &photos); err != nil {
-		r.logger.Error("Failed to decode photos", zap.Error(err))
-		return nil, fmt.Errorf("failed to decode photos: %w", err)
-	}
-
-	return photos, nil
-}
-
-// GetByCoupleID retrieves photos by couple (user and partner) with pagination
-func (r *PhotoRepository) GetByCoupleID(ctx context.Context, userID, partnerID primitive.ObjectID, limit, offset int) ([]*domain.Photo, error) {
-	baseFilter := SoftDelete.GetActiveFilter()
-	coupleFilter := bson.M{
-		"$or": []bson.M{
-			{"user_id": userID, "partner_id": partnerID},
-			{"user_id": partnerID, "partner_id": userID},
-			{"user_id": userID, "partner_id": nil},
-			{"user_id": partnerID, "partner_id": nil},
-		},
-		"is_private": false,
+	filter := bson.M{
+		"match_code": matchCode,
+		"deleted_at": bson.M{"$exists": false},
 	}
 	
-	// Combine soft delete filter with couple filter
-	filter := bson.M{"$and": []bson.M{baseFilter, coupleFilter}}
-
-	opts := options.Find().
-		SetLimit(int64(limit)).
-		SetSkip(int64(offset)).
-		SetSort(bson.D{{Key: "date", Value: -1}})
-
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to get photos by couple ID", zap.Error(err))
+		r.logger.Error("Failed to get photos by match code", zap.Error(err), zap.String("match_code", matchCode))
 		return nil, fmt.Errorf("failed to get photos: %w", err)
 	}
 	defer cursor.Close(ctx)
@@ -121,25 +90,26 @@ func (r *PhotoRepository) GetByCoupleID(ctx context.Context, userID, partnerID p
 	return photos, nil
 }
 
-// GetByDate retrieves photos by user ID and date
-func (r *PhotoRepository) GetByDate(ctx context.Context, userID primitive.ObjectID, date time.Time) ([]*domain.Photo, error) {
-	// Create date range for the entire day
+// GetByMatchCodeAndDate retrieves photos by match code and date
+func (r *PhotoRepositoryNew) GetByMatchCodeAndDate(ctx context.Context, matchCode string, date time.Time) ([]*domain.Photo, error) {
+	// Get start and end of the day
 	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
-	endOfDay := startOfDay.Add(24 * time.Hour)
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Second)
 
-	filter := SoftDelete.GetActiveFilterWithCondition(bson.M{
-		"user_id": userID,
+	filter := bson.M{
+		"match_code": matchCode,
 		"date": bson.M{
 			"$gte": startOfDay,
-			"$lt":  endOfDay,
+			"$lte": endOfDay,
 		},
-	})
+		"deleted_at": bson.M{"$exists": false},
+	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "date", Value: -1}})
-
+	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
-		r.logger.Error("Failed to get photos by date", zap.Error(err))
+		r.logger.Error("Failed to get photos by match code and date", zap.Error(err))
 		return nil, fmt.Errorf("failed to get photos: %w", err)
 	}
 	defer cursor.Close(ctx)
@@ -151,20 +121,39 @@ func (r *PhotoRepository) GetByDate(ctx context.Context, userID primitive.Object
 	}
 
 	return photos, nil
+}
+
+// DeleteByMatchCode deletes all photos for a match code (for unmatch)
+func (r *PhotoRepositoryNew) DeleteByMatchCode(ctx context.Context, matchCode string) error {
+	filter := bson.M{
+		"match_code": matchCode,
+	}
+
+	_, err := r.collection.DeleteMany(ctx, filter)
+	if err != nil {
+		r.logger.Error("Failed to delete photos by match code", zap.Error(err))
+		return fmt.Errorf("failed to delete photos by match code: %w", err)
+	}
+
+	return nil
 }
 
 // Update updates a photo
-func (r *PhotoRepository) Update(ctx context.Context, id primitive.ObjectID, photo *domain.Photo) error {
+func (r *PhotoRepositoryNew) Update(ctx context.Context, id primitive.ObjectID, photo *domain.Photo) error {
 	photo.UpdatedAt = time.Now()
+
+	filter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
+	}
 
 	update := bson.M{
 		"$set": photo,
 	}
 
-	filter := SoftDelete.GetActiveFilterByID(id)
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		r.logger.Error("Failed to update photo", zap.Error(err), zap.String("id", id.Hex()))
+		r.logger.Error("Failed to update photo", zap.Error(err))
 		return fmt.Errorf("failed to update photo: %w", err)
 	}
 
@@ -176,13 +165,23 @@ func (r *PhotoRepository) Update(ctx context.Context, id primitive.ObjectID, pho
 }
 
 // Delete soft deletes a photo
-func (r *PhotoRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	filter := SoftDelete.GetActiveFilterByID(id)
-	update := SoftDelete.CreateSoftDeleteUpdate()
+func (r *PhotoRepositoryNew) Delete(ctx context.Context, id primitive.ObjectID) error {
+	filter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": false},
+	}
+
+	now := time.Now()
+	update := bson.M{
+		"$set": bson.M{
+			"deleted_at": now,
+			"updated_at": now,
+		},
+	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		r.logger.Error("Failed to soft delete photo", zap.Error(err), zap.String("id", id.Hex()))
+		r.logger.Error("Failed to delete photo", zap.Error(err))
 		return fmt.Errorf("failed to delete photo: %w", err)
 	}
 
@@ -190,20 +189,20 @@ func (r *PhotoRepository) Delete(ctx context.Context, id primitive.ObjectID) err
 		return fmt.Errorf("photo not found")
 	}
 
-	r.logger.Info("Photo soft deleted successfully", zap.String("photo_id", id.Hex()))
 	return nil
 }
 
-// Search searches photos by title, description, or tags
-func (r *PhotoRepository) Search(ctx context.Context, userID primitive.ObjectID, query string, limit, offset int) ([]*domain.Photo, error) {
-	filter := SoftDelete.GetActiveFilterWithCondition(bson.M{
-		"user_id": userID,
+// SearchByMatchCode searches photos by match code and query
+func (r *PhotoRepositoryNew) SearchByMatchCode(ctx context.Context, matchCode string, query string, limit, offset int) ([]*domain.Photo, error) {
+	filter := bson.M{
+		"match_code": matchCode,
 		"$or": []bson.M{
 			{"title": bson.M{"$regex": query, "$options": "i"}},
 			{"description": bson.M{"$regex": query, "$options": "i"}},
 			{"tags": bson.M{"$in": []string{query}}},
 		},
-	})
+		"deleted_at": bson.M{"$exists": false},
+	}
 
 	opts := options.Find().
 		SetLimit(int64(limit)).
@@ -226,30 +225,38 @@ func (r *PhotoRepository) Search(ctx context.Context, userID primitive.ObjectID,
 	return photos, nil
 }
 
-// Restore restores a soft deleted photo
-func (r *PhotoRepository) Restore(ctx context.Context, id primitive.ObjectID) error {
-	filter := SoftDelete.GetDeletedFilterWithCondition(bson.M{"_id": id})
-	update := SoftDelete.CreateRestoreUpdate()
+// Restore restores a soft-deleted photo
+func (r *PhotoRepositoryNew) Restore(ctx context.Context, id primitive.ObjectID) error {
+	filter := bson.M{
+		"_id":        id,
+		"deleted_at": bson.M{"$exists": true},
+	}
+
+	update := bson.M{
+		"$unset": bson.M{"deleted_at": ""},
+		"$set":   bson.M{"updated_at": time.Now()},
+	}
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		r.logger.Error("Failed to restore photo", zap.Error(err), zap.String("id", id.Hex()))
+		r.logger.Error("Failed to restore photo", zap.Error(err))
 		return fmt.Errorf("failed to restore photo: %w", err)
 	}
 
 	if result.MatchedCount == 0 {
-		return fmt.Errorf("deleted photo not found")
+		return fmt.Errorf("photo not found or not deleted")
 	}
 
-	r.logger.Info("Photo restored successfully", zap.String("photo_id", id.Hex()))
 	return nil
 }
 
-// HardDelete permanently deletes a photo from database
-func (r *PhotoRepository) HardDelete(ctx context.Context, id primitive.ObjectID) error {
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+// HardDelete permanently deletes a photo
+func (r *PhotoRepositoryNew) HardDelete(ctx context.Context, id primitive.ObjectID) error {
+	filter := bson.M{"_id": id}
+
+	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		r.logger.Error("Failed to hard delete photo", zap.Error(err), zap.String("id", id.Hex()))
+		r.logger.Error("Failed to hard delete photo", zap.Error(err))
 		return fmt.Errorf("failed to hard delete photo: %w", err)
 	}
 
@@ -257,18 +264,20 @@ func (r *PhotoRepository) HardDelete(ctx context.Context, id primitive.ObjectID)
 		return fmt.Errorf("photo not found")
 	}
 
-	r.logger.Warn("Photo hard deleted permanently", zap.String("photo_id", id.Hex()))
 	return nil
 }
 
-// ListDeleted retrieves soft deleted photos with pagination
-func (r *PhotoRepository) ListDeleted(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*domain.Photo, error) {
+// ListDeleted retrieves soft-deleted photos by match code
+func (r *PhotoRepositoryNew) ListDeleted(ctx context.Context, matchCode string, limit, offset int) ([]*domain.Photo, error) {
+	filter := bson.M{
+		"match_code": matchCode,
+		"deleted_at": bson.M{"$exists": true},
+	}
+
 	opts := options.Find().
 		SetLimit(int64(limit)).
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "deleted_at", Value: -1}})
-
-	filter := SoftDelete.GetDeletedFilterWithCondition(bson.M{"user_id": userID})
 
 	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
@@ -279,8 +288,8 @@ func (r *PhotoRepository) ListDeleted(ctx context.Context, userID primitive.Obje
 
 	var photos []*domain.Photo
 	if err := cursor.All(ctx, &photos); err != nil {
-		r.logger.Error("Failed to decode deleted photos", zap.Error(err))
-		return nil, fmt.Errorf("failed to decode deleted photos: %w", err)
+		r.logger.Error("Failed to decode photos", zap.Error(err))
+		return nil, fmt.Errorf("failed to decode photos: %w", err)
 	}
 
 	return photos, nil

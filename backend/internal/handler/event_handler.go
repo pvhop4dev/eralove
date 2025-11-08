@@ -47,17 +47,40 @@ func NewEventHandler(
 // @Failure 401 {object} ErrorResponse
 // @Router /events [post]
 func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
+	h.logger.Info("=== CREATE EVENT HANDLER CALLED ===",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("method", c.Method()),
+		zap.String("path", c.Path()),
+		zap.String("body", string(c.Body())))
+	
 	userID := getUserIDFromContext(c)
+	
+	h.logger.Info("Creating event",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("user_id", userID.Hex()))
 
 	var req domain.CreateEventRequest
 	if err := c.BodyParser(&req); err != nil {
+		h.logger.Error("Failed to parse event request body",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid request body",
 			Message: err.Error(),
 		})
 	}
+	
+	h.logger.Info("Event request parsed",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("title", req.Title),
+		zap.String("event_type", req.EventType),
+		zap.Time("date", req.Date))
 
 	if err := h.validator.Struct(req); err != nil {
+		h.logger.Error("Event validation failed",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err),
+			zap.Any("request", req))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: err.Error(),
@@ -68,12 +91,18 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 	if err != nil {
 		h.logger.Error("Failed to create event",
 			zap.String("trace_id", getTraceID(c)),
+			zap.String("user_id", userID.Hex()),
 			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to create event",
 			Message: err.Error(),
 		})
 	}
+	
+	h.logger.Info("Event created successfully",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("event_id", event.ID),
+		zap.String("title", event.Title))
 
 	return c.Status(fiber.StatusCreated).JSON(event)
 }
@@ -100,25 +129,31 @@ func (h *EventHandler) GetEvents(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	year, _ := strconv.Atoi(c.Query("year", "0"))
 	month, _ := strconv.Atoi(c.Query("month", "0"))
-	partnerIDStr := c.Query("partner_id")
+	
+	h.logger.Info("Getting events",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("user_id", userID.Hex()),
+		zap.Int("page", page),
+		zap.Int("limit", limit),
+		zap.Int("year", year),
+		zap.Int("month", month))
 
-	var partnerID *primitive.ObjectID
-	if partnerIDStr != "" {
-		if id, err := primitive.ObjectIDFromHex(partnerIDStr); err == nil {
-			partnerID = &id
-		}
-	}
-
-	events, total, err := h.eventService.GetUserEvents(c.Context(), userID, partnerID, year, month, page, limit)
+	events, total, err := h.eventService.GetCoupleEvents(c.Context(), userID, year, month, page, limit)
 	if err != nil {
 		h.logger.Error("Failed to get events",
 			zap.String("trace_id", getTraceID(c)),
+			zap.String("user_id", userID.Hex()),
 			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to get events",
 			Message: err.Error(),
 		})
 	}
+	
+	h.logger.Info("Events retrieved successfully",
+		zap.String("trace_id", getTraceID(c)),
+		zap.Int64("total", total),
+		zap.Int("count", len(events)))
 
 	return c.JSON(domain.EventListResponse{
 		Events: events,
@@ -180,14 +215,26 @@ func (h *EventHandler) UpdateEvent(c *fiber.Ctx) error {
 	userID := getUserIDFromContext(c)
 	eventID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
+		h.logger.Error("Invalid event ID",
+			zap.String("trace_id", getTraceID(c)),
+			zap.String("id", c.Params("id")),
+			zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid event ID",
 			Message: "Event ID must be a valid ObjectID",
 		})
 	}
+	
+	h.logger.Info("Updating event",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("event_id", eventID.Hex()),
+		zap.String("user_id", userID.Hex()))
 
 	var req domain.UpdateEventRequest
 	if err := c.BodyParser(&req); err != nil {
+		h.logger.Error("Failed to parse update request",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid request body",
 			Message: err.Error(),
@@ -195,6 +242,9 @@ func (h *EventHandler) UpdateEvent(c *fiber.Ctx) error {
 	}
 
 	if err := h.validator.Struct(req); err != nil {
+		h.logger.Error("Update validation failed",
+			zap.String("trace_id", getTraceID(c)),
+			zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Validation failed",
 			Message: err.Error(),
@@ -205,12 +255,17 @@ func (h *EventHandler) UpdateEvent(c *fiber.Ctx) error {
 	if err != nil {
 		h.logger.Error("Failed to update event",
 			zap.String("trace_id", getTraceID(c)),
+			zap.String("event_id", eventID.Hex()),
 			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to update event",
 			Message: err.Error(),
 		})
 	}
+	
+	h.logger.Info("Event updated successfully",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("event_id", eventID.Hex()))
 
 	return c.JSON(event)
 }
@@ -230,22 +285,36 @@ func (h *EventHandler) DeleteEvent(c *fiber.Ctx) error {
 	userID := getUserIDFromContext(c)
 	eventID, err := primitive.ObjectIDFromHex(c.Params("id"))
 	if err != nil {
+		h.logger.Error("Invalid event ID for deletion",
+			zap.String("trace_id", getTraceID(c)),
+			zap.String("id", c.Params("id")),
+			zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(ErrorResponse{
 			Error:   "Invalid event ID",
 			Message: "Event ID must be a valid ObjectID",
 		})
 	}
+	
+	h.logger.Info("Deleting event",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("event_id", eventID.Hex()),
+		zap.String("user_id", userID.Hex()))
 
 	err = h.eventService.DeleteEvent(c.Context(), eventID, userID)
 	if err != nil {
 		h.logger.Error("Failed to delete event",
 			zap.String("trace_id", getTraceID(c)),
+			zap.String("event_id", eventID.Hex()),
 			zap.Error(err))
 		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
 			Error:   "Failed to delete event",
 			Message: err.Error(),
 		})
 	}
+	
+	h.logger.Info("Event deleted successfully",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("event_id", eventID.Hex()))
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

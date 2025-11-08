@@ -17,6 +17,8 @@ import (
 // UserService implements domain.UserService
 type UserService struct {
 	userRepo        domain.UserRepository
+	eventRepo       domain.EventRepository
+	photoRepo       domain.PhotoRepository
 	passwordManager *auth.PasswordManager
 	jwtManager      *auth.JWTManager
 	emailService    *email.EmailService
@@ -26,6 +28,8 @@ type UserService struct {
 // NewUserService creates a new user service
 func NewUserService(
 	userRepo domain.UserRepository,
+	eventRepo domain.EventRepository,
+	photoRepo domain.PhotoRepository,
 	passwordManager *auth.PasswordManager,
 	jwtManager *auth.JWTManager,
 	emailService *email.EmailService,
@@ -33,6 +37,8 @@ func NewUserService(
 ) domain.UserService {
 	return &UserService{
 		userRepo:        userRepo,
+		eventRepo:       eventRepo,
+		photoRepo:       photoRepo,
 		passwordManager: passwordManager,
 		jwtManager:      jwtManager,
 		emailService:    emailService,
@@ -186,6 +192,41 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID primitive.Object
 	if req.PartnerName != "" {
 		user.PartnerName = req.PartnerName
 	}
+	
+	// Update anniversary date if provided and user is matched
+	if req.AnniversaryDate != nil {
+		if user.MatchCode == "" {
+			s.logger.Warn("Attempted to update anniversary date for unmatched user",
+				zap.String("user_id", userID.Hex()))
+			return nil, fmt.Errorf("cannot set anniversary date: user is not matched")
+		}
+		
+		user.AnniversaryDate = req.AnniversaryDate.ToTimePtr()
+		
+		// Also update partner's anniversary date to keep them in sync
+		if user.PartnerID != nil {
+			partner, err := s.userRepo.GetByID(ctx, *user.PartnerID)
+			if err == nil && partner != nil {
+				partner.AnniversaryDate = req.AnniversaryDate.ToTimePtr()
+				partner.UpdatedAt = time.Now()
+				if err := s.userRepo.Update(ctx, partner.ID, partner); err != nil {
+					s.logger.Error("Failed to update partner's anniversary date",
+						zap.Error(err),
+						zap.String("partner_id", partner.ID.Hex()))
+					// Continue anyway, we'll update the current user
+				} else {
+					s.logger.Info("Partner's anniversary date updated",
+						zap.String("partner_id", partner.ID.Hex()))
+				}
+			}
+		}
+		
+		s.logger.Info("Anniversary date updated",
+			zap.String("user_id", userID.Hex()),
+			zap.Time("anniversary_date", *user.AnniversaryDate))
+	}
+
+	user.UpdatedAt = time.Now()
 
 	// Update user
 	if err := s.userRepo.Update(ctx, userID, user); err != nil {
@@ -485,6 +526,72 @@ func (s *UserService) ResetPassword(ctx context.Context, req *domain.ResetPasswo
 	s.logger.Info("Password reset successfully",
 		zap.String("user_id", user.ID.Hex()),
 		zap.String("email", user.Email))
+
+	return nil
+}
+
+// UnmatchPartner breaks the match between user and partner, deleting all shared data
+func (s *UserService) UnmatchPartner(ctx context.Context, userID primitive.ObjectID) error {
+	s.logger.Info("Unmatching partner", zap.String("user_id", userID.Hex()))
+
+	// Get user
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		s.logger.Error("Failed to get user", zap.Error(err))
+		return fmt.Errorf("user not found")
+	}
+
+	if user.MatchCode == "" {
+		s.logger.Warn("User is not matched", zap.String("user_id", userID.Hex()))
+		return fmt.Errorf("user is not matched with anyone")
+	}
+
+	matchCode := user.MatchCode
+	partnerID := user.PartnerID
+
+	// Delete all events with match code
+	if err := s.eventRepo.DeleteByMatchCode(matchCode); err != nil {
+		s.logger.Error("Failed to delete events", zap.Error(err))
+		return fmt.Errorf("failed to delete shared events")
+	}
+
+	// Delete all photos with match code
+	if err := s.photoRepo.DeleteByMatchCode(ctx, matchCode); err != nil {
+		s.logger.Error("Failed to delete photos", zap.Error(err))
+		return fmt.Errorf("failed to delete shared photos")
+	}
+
+	// Clear partner's match fields if partner exists
+	if partnerID != nil {
+		partner, err := s.userRepo.GetByID(ctx, *partnerID)
+		if err == nil && partner != nil {
+			partner.PartnerID = nil
+			partner.MatchCode = ""
+			partner.MatchedAt = nil
+			partner.AnniversaryDate = nil
+			partner.UpdatedAt = time.Now()
+			
+			if err := s.userRepo.Update(ctx, partner.ID, partner); err != nil {
+				s.logger.Error("Failed to update partner", zap.Error(err))
+			}
+		}
+	}
+
+	// Clear user's match fields
+	user.PartnerID = nil
+	user.MatchCode = ""
+	user.MatchedAt = nil
+	user.AnniversaryDate = nil
+	user.UpdatedAt = time.Now()
+
+	if err := s.userRepo.Update(ctx, userID, user); err != nil {
+		s.logger.Error("Failed to update user", zap.Error(err))
+		return fmt.Errorf("failed to unmatch")
+	}
+
+	s.logger.Info("Successfully unmatched partner",
+		zap.String("user_id", userID.Hex()),
+		zap.String("match_code", matchCode))
 
 	return nil
 }

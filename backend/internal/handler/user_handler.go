@@ -653,3 +653,37 @@ func (h *UserHandler) ResetPassword(c *fiber.Ctx) error {
 		Message: h.i18n.Translate(c.Get("Accept-Language", "en"), "password_reset_successful", nil),
 	})
 }
+
+// UnmatchPartner godoc
+// @Summary Unmatch from partner
+// @Description Break match with partner and delete all shared data (events and photos)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/unmatch [post]
+func (h *UserHandler) UnmatchPartner(c *fiber.Ctx) error {
+	userID := getUserIDFromContext(c)
+	
+	h.logger.Info("Unmatch partner request",
+		zap.String("trace_id", getTraceID(c)),
+		zap.String("user_id", userID.Hex()))
+	
+	if err := h.userService.UnmatchPartner(c.Context(), userID); err != nil {
+		LogServiceError(h.logger, c, err, "Unmatch partner")
+		return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+			Error:   "Failed to unmatch",
+			Message: err.Error(),
+		})
+	}
+	
+	LogServiceSuccess(h.logger, c, "Unmatch partner")
+	
+	return c.JSON(SuccessResponse{
+		Message: "Successfully unmatched from partner. All shared data has been deleted.",
+	})
+}

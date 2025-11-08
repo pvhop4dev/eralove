@@ -11,8 +11,8 @@ import (
 // Photo represents a photo in the system
 type Photo struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID      primitive.ObjectID `json:"user_id" bson:"user_id"`
-	PartnerID   *primitive.ObjectID `json:"partner_id,omitempty" bson:"partner_id,omitempty"`
+	MatchCode   string             `json:"match_code" bson:"match_code" validate:"required"`
+	CreatedBy   primitive.ObjectID `json:"created_by" bson:"created_by" validate:"required"` // For audit trail and notifications
 	Title       string             `json:"title" bson:"title" validate:"required,min=1,max=200"`
 	Description string             `json:"description,omitempty" bson:"description,omitempty"`
 	ImageURL    string             `json:"image_url" bson:"image_url" validate:"required"`
@@ -48,20 +48,20 @@ type UpdatePhotoRequest struct {
 	IsPrivate   *bool     `json:"is_private,omitempty"`
 }
 
-// PhotoResponse represents the photo response
+// PhotoResponse represents the API response for a photo
 type PhotoResponse struct {
-	ID          primitive.ObjectID `json:"id"`
-	UserID      primitive.ObjectID `json:"user_id"`
-	PartnerID   *primitive.ObjectID `json:"partner_id,omitempty"`
-	Title       string             `json:"title"`
-	Description string             `json:"description,omitempty"`
-	ImageURL    string             `json:"image_url"`
-	Date        time.Time          `json:"date"`
-	Location    string             `json:"location,omitempty"`
-	Tags        []string           `json:"tags,omitempty"`
-	IsPrivate   bool               `json:"is_private"`
-	CreatedAt   time.Time          `json:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at"`
+	ID          string    `json:"id"`
+	MatchCode   string    `json:"match_code"`
+	CreatedBy   string    `json:"created_by"` // User ID who uploaded this photo
+	Title       string    `json:"title"`
+	Description string    `json:"description,omitempty"`
+	ImageURL    string    `json:"image_url"`
+	Date        time.Time `json:"date"`
+	Location    string    `json:"location,omitempty"`
+	Tags        []string  `json:"tags,omitempty"`
+	IsPrivate   bool      `json:"is_private"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // ToResponse converts Photo to PhotoResponse
@@ -100,9 +100,9 @@ func (p *Photo) ToResponse() *PhotoResponse {
 	// Frontend will prepend /api/v1/files/ to make it a backend proxy URL
 	
 	return &PhotoResponse{
-		ID:          p.ID,
-		UserID:      p.UserID,
-		PartnerID:   p.PartnerID,
+		ID:          p.ID.Hex(),
+		MatchCode:   p.MatchCode,
+		CreatedBy:   p.CreatedBy.Hex(),
 		Title:       p.Title,
 		Description: p.Description,
 		ImageURL:    imageURL,
@@ -119,17 +119,17 @@ func (p *Photo) ToResponse() *PhotoResponse {
 type PhotoRepository interface {
 	Create(ctx context.Context, photo *Photo) error
 	GetByID(ctx context.Context, id primitive.ObjectID) (*Photo, error)
-	GetByUserID(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*Photo, error)
-	GetByCoupleID(ctx context.Context, userID, partnerID primitive.ObjectID, limit, offset int) ([]*Photo, error)
-	GetByDate(ctx context.Context, userID primitive.ObjectID, date time.Time) ([]*Photo, error)
+	GetByMatchCode(ctx context.Context, matchCode string, limit, offset int) ([]*Photo, error)
+	GetByMatchCodeAndDate(ctx context.Context, matchCode string, date time.Time) ([]*Photo, error)
+	DeleteByMatchCode(ctx context.Context, matchCode string) error
 	Update(ctx context.Context, id primitive.ObjectID, photo *Photo) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	Search(ctx context.Context, userID primitive.ObjectID, query string, limit, offset int) ([]*Photo, error)
+	SearchByMatchCode(ctx context.Context, matchCode string, query string, limit, offset int) ([]*Photo, error)
 	
 	// Soft delete management
 	Restore(ctx context.Context, id primitive.ObjectID) error
 	HardDelete(ctx context.Context, id primitive.ObjectID) error
-	ListDeleted(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*Photo, error)
+	ListDeleted(ctx context.Context, matchCode string, limit, offset int) ([]*Photo, error)
 }
 
 // PhotoService defines the interface for photo business logic
@@ -137,7 +137,7 @@ type PhotoService interface {
 	CreatePhoto(ctx context.Context, userID primitive.ObjectID, req *CreatePhotoRequest, file interface{}) (*PhotoResponse, error)
 	CreatePhotoWithPath(ctx context.Context, userID primitive.ObjectID, req *CreatePhotoRequest) (*PhotoResponse, error)
 	GetPhoto(ctx context.Context, photoID, userID primitive.ObjectID) (*PhotoResponse, error)
-	GetUserPhotos(ctx context.Context, userID primitive.ObjectID, partnerID *primitive.ObjectID, page, limit int) ([]*PhotoResponse, int64, error)
+	GetCouplePhotos(ctx context.Context, userID primitive.ObjectID, page, limit int) ([]*PhotoResponse, int64, error)
 	UpdatePhoto(ctx context.Context, photoID, userID primitive.ObjectID, req *UpdatePhotoRequest) (*PhotoResponse, error)
 	DeletePhoto(ctx context.Context, photoID, userID primitive.ObjectID) error
 }

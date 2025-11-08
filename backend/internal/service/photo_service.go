@@ -36,10 +36,14 @@ func NewPhotoService(
 
 // CreatePhoto creates a new photo
 func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectID, req *domain.CreatePhotoRequest, file interface{}) (*domain.PhotoResponse, error) {
-	// Get user to check if they have a partner
+	// Get user to get match code
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
+	}
+
+	if user.MatchCode == "" {
+		return nil, fmt.Errorf("user is not matched with anyone")
 	}
 
 	var imageURL string
@@ -99,8 +103,8 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 
 	// Create photo
 	photo := &domain.Photo{
-		UserID:      userID,
-		PartnerID:   user.PartnerID,
+		MatchCode:   user.MatchCode,
+		CreatedBy:   userID, // Track who uploaded this photo
 		Title:       req.Title,
 		Description: req.Description,
 		ImageURL:    imageURL,
@@ -117,6 +121,7 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 
 	s.logger.Info("Photo created successfully",
 		zap.String("photo_id", photo.ID.Hex()),
+		zap.String("created_by", userID.Hex()),
 		zap.String("image_url", imageURL))
 
 	return photo.ToResponse(), nil
@@ -124,10 +129,14 @@ func (s *PhotoService) CreatePhoto(ctx context.Context, userID primitive.ObjectI
 
 // CreatePhotoWithPath creates a photo with a pre-uploaded file path
 func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive.ObjectID, req *domain.CreatePhotoRequest) (*domain.PhotoResponse, error) {
-	// Get user to check if they have a partner
+	// Get user to get match code
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
+	}
+
+	if user.MatchCode == "" {
+		return nil, fmt.Errorf("user is not matched with anyone")
 	}
 
 	// Convert file path to full URL
@@ -151,8 +160,8 @@ func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive
 
 	// Create photo
 	photo := &domain.Photo{
-		UserID:      userID,
-		PartnerID:   user.PartnerID,
+		MatchCode:   user.MatchCode,
+		CreatedBy:   userID, // Track who uploaded this photo
 		Title:       req.Title,
 		Description: req.Description,
 		ImageURL:    imageURL,
@@ -169,7 +178,7 @@ func (s *PhotoService) CreatePhotoWithPath(ctx context.Context, userID primitive
 
 	s.logger.Info("Photo created successfully with path",
 		zap.String("photo_id", photo.ID.Hex()),
-		zap.String("user_id", userID.Hex()),
+		zap.String("created_by", userID.Hex()),
 		zap.String("file_path", req.FilePath),
 		zap.String("image_url", imageURL))
 
@@ -183,20 +192,36 @@ func (s *PhotoService) GetPhoto(ctx context.Context, photoID, userID primitive.O
 		return nil, fmt.Errorf("photo not found")
 	}
 
+	// Get user to verify match code
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
 	// Check if user has access to this photo
-	if photo.UserID != userID && (photo.PartnerID == nil || *photo.PartnerID != userID) {
+	if photo.MatchCode != user.MatchCode {
 		return nil, fmt.Errorf("access denied")
 	}
 
 	return photo.ToResponse(), nil
 }
 
-// GetUserPhotos retrieves photos by user ID with pagination
-func (s *PhotoService) GetUserPhotos(ctx context.Context, userID primitive.ObjectID, partnerID *primitive.ObjectID, page, limit int) ([]*domain.PhotoResponse, int64, error) {
+// GetCouplePhotos retrieves photos for a couple with pagination
+func (s *PhotoService) GetCouplePhotos(ctx context.Context, userID primitive.ObjectID, page, limit int) ([]*domain.PhotoResponse, int64, error) {
+	// Get user to get match code
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("user not found")
+	}
+
+	if user.MatchCode == "" {
+		return []*domain.PhotoResponse{}, 0, nil
+	}
+
 	// Calculate offset from page
 	offset := (page - 1) * limit
 	
-	photos, err := s.photoRepo.GetByUserID(ctx, userID, limit, offset)
+	photos, err := s.photoRepo.GetByMatchCode(ctx, user.MatchCode, limit, offset)
 	if err != nil {
 		s.logger.Error("Failed to get user photos", zap.Error(err))
 		return nil, 0, fmt.Errorf("failed to get photos")
@@ -214,35 +239,19 @@ func (s *PhotoService) GetUserPhotos(ctx context.Context, userID primitive.Objec
 	return responses, total, nil
 }
 
-// GetCouplePhotos retrieves photos for a couple with pagination
-func (s *PhotoService) GetCouplePhotos(ctx context.Context, userID primitive.ObjectID, limit, offset int) ([]*domain.PhotoResponse, error) {
-	// Get user to find partner
+// GetPhotosByDate retrieves photos by date
+func (s *PhotoService) GetPhotosByDate(ctx context.Context, userID primitive.ObjectID, date time.Time) ([]*domain.PhotoResponse, error) {
+	// Get user to get match code
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
 	}
 
-	if user.PartnerID == nil {
-		return nil, fmt.Errorf("user has no partner")
+	if user.MatchCode == "" {
+		return nil, fmt.Errorf("user is not matched")
 	}
 
-	photos, err := s.photoRepo.GetByCoupleID(ctx, userID, *user.PartnerID, limit, offset)
-	if err != nil {
-		s.logger.Error("Failed to get couple photos", zap.Error(err))
-		return nil, fmt.Errorf("failed to get photos")
-	}
-
-	responses := make([]*domain.PhotoResponse, len(photos))
-	for i, photo := range photos {
-		responses[i] = photo.ToResponse()
-	}
-
-	return responses, nil
-}
-
-// GetPhotosByDate retrieves photos by date
-func (s *PhotoService) GetPhotosByDate(ctx context.Context, userID primitive.ObjectID, date time.Time) ([]*domain.PhotoResponse, error) {
-	photos, err := s.photoRepo.GetByDate(ctx, userID, date)
+	photos, err := s.photoRepo.GetByMatchCodeAndDate(ctx, user.MatchCode, date)
 	if err != nil {
 		s.logger.Error("Failed to get photos by date", zap.Error(err))
 		return nil, fmt.Errorf("failed to get photos")
@@ -264,8 +273,14 @@ func (s *PhotoService) UpdatePhoto(ctx context.Context, photoID, userID primitiv
 		return nil, fmt.Errorf("photo not found")
 	}
 
-	// Check ownership
-	if photo.UserID != userID {
+	// Get user to verify match code
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// Check authorization via match code
+	if photo.MatchCode != user.MatchCode {
 		return nil, fmt.Errorf("access denied")
 	}
 
@@ -312,8 +327,14 @@ func (s *PhotoService) DeletePhoto(ctx context.Context, photoID, userID primitiv
 		return fmt.Errorf("photo not found")
 	}
 
-	// Check ownership
-	if photo.UserID != userID {
+	// Get user to verify match code
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found")
+	}
+
+	// Check authorization via match code
+	if photo.MatchCode != user.MatchCode {
 		return fmt.Errorf("access denied")
 	}
 
@@ -331,7 +352,17 @@ func (s *PhotoService) DeletePhoto(ctx context.Context, photoID, userID primitiv
 
 // SearchPhotos searches photos by query
 func (s *PhotoService) SearchPhotos(ctx context.Context, userID primitive.ObjectID, query string, limit, offset int) ([]*domain.PhotoResponse, error) {
-	photos, err := s.photoRepo.Search(ctx, userID, query, limit, offset)
+	// Get user to get match code
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	if user.MatchCode == "" {
+		return nil, fmt.Errorf("user is not matched")
+	}
+
+	photos, err := s.photoRepo.SearchByMatchCode(ctx, user.MatchCode, query, limit, offset)
 	if err != nil {
 		s.logger.Error("Failed to search photos", zap.Error(err))
 		return nil, fmt.Errorf("failed to search photos")

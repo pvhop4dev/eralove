@@ -143,11 +143,11 @@ func New(cfg *config.Config, logger *zap.Logger) (*App, error) {
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db.Database, logger)
-	// Note: PhotoRepository is now handled by Wire dependency injection
+	eventRepo := repository.NewEventRepository(db.Database, logger)
+	photoRepo := repository.NewPhotoRepositoryWithMatchCode(db.Database, logger)
 
 	// Initialize services
-	userService := service.NewUserService(userRepo, passwordManager, jwtManager, emailService, logger)
-	// Note: PhotoService is now handled by Wire dependency injection
+	userService := service.NewUserService(userRepo, eventRepo, photoRepo, passwordManager, jwtManager, emailService, logger)
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userService, validator, i18nService, logger)
@@ -343,6 +343,37 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	auth.Post("/refresh", deps.UserHandler.RefreshToken)
 	auth.Post("/logout", deps.UserHandler.Logout)
 
+	// Public file routes (no authentication required)
+	// Avatar files should be publicly accessible for display in <img> tags
+	api.Get("/files/avatars/*", func(c *fiber.Ctx) error {
+		// Get the file key from the URL (e.g., "avatars/userid/filename.jpg")
+		fileKey := c.Params("*")
+		fullKey := "avatars/" + fileKey
+		
+		logger.Info("Public avatar file request",
+			zap.String("file_key", fullKey))
+		
+		// Generate presigned download URL from MinIO (valid for 1 hour)
+		ctx := c.Context()
+		downloadURL, err := deps.StorageService.Download(ctx, &domain.DownloadRequest{
+			Key:    fullKey,
+			Expiry: 1 * time.Hour,
+		})
+		if err != nil {
+			logger.Error("Failed to generate download URL", zap.Error(err), zap.String("key", fullKey))
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to access file",
+			})
+		}
+		
+		logger.Info("Generated presigned URL for avatar", 
+			zap.String("key", fullKey),
+			zap.String("presigned_url", downloadURL))
+		
+		// Redirect to the presigned URL
+		return c.Redirect(downloadURL, fiber.StatusTemporaryRedirect)
+	})
+
 	// Protected routes (authentication required)
 	// Use specific path instead of "/" to avoid catching all routes
 	protected := api.Group("")
@@ -350,6 +381,7 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 
 	// File proxy handler - proxies requests to MinIO with authentication
 	// This allows frontend to fetch files through our backend with JWT auth
+	// Note: Avatar files are handled by public route above
 	protected.Get("/files/*", func(c *fiber.Ctx) error {
 		// Get the file key from the URL (e.g., "photos/userid_timestamp.jpg")
 		fileKey := c.Params("*")
@@ -384,6 +416,7 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	users.Get("/profile", deps.UserHandler.GetProfile)
 	users.Put("/profile", deps.UserHandler.UpdateProfile)
 	users.Delete("/account", deps.UserHandler.DeleteAccount)
+	users.Post("/unmatch", deps.UserHandler.UnmatchPartner)
 
 	// Photo routes (when handlers are available)
 	photos := protected.Group("/photos")
@@ -431,14 +464,18 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	photos.Put("/:id", deps.PhotoHandler.UpdatePhoto)
 	photos.Delete("/:id", deps.PhotoHandler.DeletePhoto)
 
-	// TODO: Uncomment when handlers are implemented
-	// // Event routes
-	// events := protected.Group("/events")
-	// events.Post("/", deps.EventHandler.CreateEvent)
-	// events.Get("/", deps.EventHandler.GetEvents)
-	// events.Get("/:id", deps.EventHandler.GetEvent)
-	// events.Put("/:id", deps.EventHandler.UpdateEvent)
-	// events.Delete("/:id", deps.EventHandler.DeleteEvent)
+	// Event routes
+	events := protected.Group("/events")
+	events.Post("/", func(c *fiber.Ctx) error {
+		logger.Info("Event POST route hit",
+			zap.String("method", c.Method()),
+			zap.String("path", c.Path()))
+		return deps.EventHandler.CreateEvent(c)
+	})
+	events.Get("/", deps.EventHandler.GetEvents)
+	events.Get("/:id", deps.EventHandler.GetEvent)
+	events.Put("/:id", deps.EventHandler.UpdateEvent)
+	events.Delete("/:id", deps.EventHandler.DeleteEvent)
 
 	// // Message routes
 	// messages := protected.Group("/messages")
@@ -448,14 +485,14 @@ func setupRoutesWithDeps(app *fiber.App, deps *Dependencies, jwtManager *auth.JW
 	// messages.Post("/mark-read", deps.MessageHandler.MarkAsRead)
 	// messages.Delete("/:id", deps.MessageHandler.DeleteMessage)
 
-	// // Match request routes
-	// matchRequests := protected.Group("/match-requests")
-	// matchRequests.Post("/", deps.MatchRequestHandler.SendMatchRequest)
-	// matchRequests.Get("/sent", deps.MatchRequestHandler.GetSentRequests)
-	// matchRequests.Get("/received", deps.MatchRequestHandler.GetReceivedRequests)
-	// matchRequests.Get("/:id", deps.MatchRequestHandler.GetMatchRequest)
-	// matchRequests.Post("/:id/respond", deps.MatchRequestHandler.RespondToMatchRequest)
-	// matchRequests.Delete("/:id", deps.MatchRequestHandler.CancelMatchRequest)
+	// Match request routes
+	matchRequests := protected.Group("/match-requests")
+	matchRequests.Post("/", deps.MatchRequestHandler.SendMatchRequest)
+	matchRequests.Get("/sent", deps.MatchRequestHandler.GetSentRequests)
+	matchRequests.Get("/received", deps.MatchRequestHandler.GetReceivedRequests)
+	matchRequests.Get("/:id", deps.MatchRequestHandler.GetMatchRequest)
+	matchRequests.Post("/:id/respond", deps.MatchRequestHandler.RespondToMatchRequest)
+	matchRequests.Delete("/:id", deps.MatchRequestHandler.CancelMatchRequest)
 
 	// Upload routes
 	upload := protected.Group("/upload")
@@ -476,6 +513,9 @@ func jwtMiddleware(jwtManager *auth.JWTManager, logger *zap.Logger) fiber.Handle
 			})
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {
+			logger.Info("JWT middleware success handler",
+				zap.String("path", c.Path()))
+			
 			// Extract user info from token and set in context
 			token := c.Locals("user").(*jwt.Token)
 			claims := token.Claims.(jwt.MapClaims)
@@ -488,6 +528,10 @@ func jwtMiddleware(jwtManager *auth.JWTManager, logger *zap.Logger) fiber.Handle
 					"error": "Invalid token",
 				})
 			}
+
+			logger.Info("User authenticated",
+				zap.String("user_id", userID.Hex()),
+				zap.String("path", c.Path()))
 
 			c.Locals("user_id", userID)
 			c.Locals("user_email", claims["email"])

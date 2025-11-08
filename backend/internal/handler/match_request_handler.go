@@ -194,7 +194,7 @@ func (h *MatchRequestHandler) RespondToMatchRequest(c *fiber.Ctx) error {
 		})
 	}
 
-	matchRequest, err := h.matchRequestService.RespondToMatchRequest(c.Context(), requestID, userID, req.Action)
+	matchRequest, err := h.matchRequestService.RespondToMatchRequest(c.Context(), requestID, userID, &req)
 	if err != nil {
 		h.logger.Error("Failed to respond to match request",
 			zap.String("trace_id", getTraceID(c)),
@@ -277,4 +277,3 @@ func (h *MatchRequestHandler) CancelMatchRequest(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
-

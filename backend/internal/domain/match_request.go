@@ -40,7 +40,8 @@ type CreateMatchRequestRequest struct {
 
 // RespondToMatchRequestRequest represents the request to respond to a match request
 type RespondToMatchRequestRequest struct {
-	Action string `json:"action" validate:"required,oneof=accept reject"`
+	Action          string     `json:"action" validate:"required,oneof=accept reject"`
+	AnniversaryDate *time.Time `json:"anniversary_date,omitempty"`
 }
 
 // MatchRequestResponse represents the match request response
@@ -102,6 +103,6 @@ type MatchRequestService interface {
 	GetMatchRequest(ctx context.Context, requestID, userID primitive.ObjectID) (*MatchRequestResponse, error)
 	GetSentRequests(ctx context.Context, userID primitive.ObjectID, status string, page, limit int) ([]*MatchRequestResponse, int64, error)
 	GetReceivedRequests(ctx context.Context, userID primitive.ObjectID, status string, page, limit int) ([]*MatchRequestResponse, int64, error)
-	RespondToMatchRequest(ctx context.Context, requestID, userID primitive.ObjectID, action string) (*MatchRequestResponse, error)
+	RespondToMatchRequest(ctx context.Context, requestID, userID primitive.ObjectID, req *RespondToMatchRequestRequest) (*MatchRequestResponse, error)
 	CancelMatchRequest(ctx context.Context, requestID, userID primitive.ObjectID) error
 }

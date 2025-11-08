@@ -95,7 +95,7 @@ func (h *PhotoHandler) CreatePhoto(c *fiber.Ctx) error {
 
 	LogServiceSuccess(h.logger, c, "Create photo", 
 		zap.String("user_id", userID.Hex()),
-		zap.String("photo_id", photo.ID.Hex()))
+		zap.String("photo_id", photo.ID))
 
 	return c.Status(fiber.StatusCreated).JSON(photo)
 }
@@ -120,25 +120,16 @@ func (h *PhotoHandler) GetPhotos(c *fiber.Ctx) error {
 	// Parse query parameters
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
-	partnerIDStr := c.Query("partner_id")
-
-	var partnerID *primitive.ObjectID
-	if partnerIDStr != "" {
-		if id, err := primitive.ObjectIDFromHex(partnerIDStr); err == nil {
-			partnerID = &id
-		}
-	}
 
 	LogRequestParsed(h.logger, c, "Get photos", 
 		zap.String("user_id", userID.Hex()),
 		zap.Int("page", page),
-		zap.Int("limit", limit),
-		zap.String("partner_id", partnerIDStr))
+		zap.Int("limit", limit))
 
 	LogServiceCall(h.logger, c, "Get photos", 
 		zap.String("user_id", userID.Hex()))
 
-	photos, total, err := h.photoService.GetUserPhotos(c.Context(), userID, partnerID, page, limit)
+	photos, total, err := h.photoService.GetCouplePhotos(c.Context(), userID, page, limit)
 	if err != nil {
 		LogServiceError(h.logger, c, err, "Get photos", 
 			zap.String("user_id", userID.Hex()))

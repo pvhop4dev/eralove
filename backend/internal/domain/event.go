@@ -10,8 +10,8 @@ import (
 // Event represents an event in the system
 type Event struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID      primitive.ObjectID `json:"user_id" bson:"user_id"`
-	PartnerID   *primitive.ObjectID `json:"partner_id,omitempty" bson:"partner_id,omitempty"`
+	MatchCode   string             `json:"match_code" bson:"match_code" validate:"required"`
+	CreatedBy   primitive.ObjectID `json:"created_by" bson:"created_by" validate:"required"` // For audit trail and notifications
 	Title       string             `json:"title" bson:"title" validate:"required,min=1,max=200"`
 	Description string             `json:"description,omitempty" bson:"description,omitempty"`
 	Date        time.Time          `json:"date" bson:"date"`
@@ -63,31 +63,31 @@ type UpdateEventRequest struct {
 	Reminder       *EventReminder `json:"reminder,omitempty"`
 }
 
-// EventResponse represents the event response
+// EventResponse represents the API response for an event
 type EventResponse struct {
-	ID             primitive.ObjectID `json:"id"`
-	UserID         primitive.ObjectID `json:"user_id"`
-	PartnerID      *primitive.ObjectID `json:"partner_id,omitempty"`
-	Title          string             `json:"title"`
-	Description    string             `json:"description,omitempty"`
-	Date           time.Time          `json:"date"`
-	Time           string             `json:"time,omitempty"`
-	Location       string             `json:"location,omitempty"`
-	EventType      string             `json:"event_type"`
-	IsRecurring    bool               `json:"is_recurring"`
-	RecurrenceRule string             `json:"recurrence_rule,omitempty"`
-	IsPrivate      bool               `json:"is_private"`
-	Reminder       *EventReminder     `json:"reminder,omitempty"`
-	CreatedAt      time.Time          `json:"created_at"`
-	UpdatedAt      time.Time          `json:"updated_at"`
+	ID             string         `json:"id"`
+	MatchCode      string         `json:"match_code"`
+	CreatedBy      string         `json:"created_by"` // User ID who created this event
+	Title          string         `json:"title"`
+	Description    string         `json:"description,omitempty"`
+	Date           time.Time      `json:"date"`
+	Time           string         `json:"time,omitempty"`
+	Location       string         `json:"location,omitempty"`
+	EventType      string         `json:"event_type"`
+	IsRecurring    bool           `json:"is_recurring"`
+	RecurrenceRule string         `json:"recurrence_rule,omitempty"`
+	IsPrivate      bool           `json:"is_private"`
+	Reminder       *EventReminder `json:"reminder,omitempty"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
 // ToResponse converts Event to EventResponse
 func (e *Event) ToResponse() *EventResponse {
 	return &EventResponse{
-		ID:             e.ID,
-		UserID:         e.UserID,
-		PartnerID:      e.PartnerID,
+		ID:             e.ID.Hex(),
+		MatchCode:      e.MatchCode,
+		CreatedBy:      e.CreatedBy.Hex(),
 		Title:          e.Title,
 		Description:    e.Description,
 		Date:           e.Date,
@@ -115,11 +115,11 @@ type EventListResponse struct {
 type EventRepository interface {
 	Create(event *Event) error
 	GetByID(id primitive.ObjectID) (*Event, error)
-	GetByUserID(userID primitive.ObjectID, limit, offset int) ([]*Event, error)
-	GetByCoupleID(userID, partnerID primitive.ObjectID, limit, offset int) ([]*Event, error)
-	GetByDateRange(userID primitive.ObjectID, startDate, endDate time.Time) ([]*Event, error)
-	GetByDate(userID primitive.ObjectID, date time.Time) ([]*Event, error)
-	GetUpcoming(userID primitive.ObjectID, limit int) ([]*Event, error)
+	GetByMatchCode(matchCode string, limit, offset int) ([]*Event, error)
+	GetByMatchCodeAndDateRange(matchCode string, startDate, endDate time.Time) ([]*Event, error)
+	GetByMatchCodeAndDate(matchCode string, date time.Time) ([]*Event, error)
+	GetUpcomingByMatchCode(matchCode string, limit int) ([]*Event, error)
+	DeleteByMatchCode(matchCode string) error
 	Update(id primitive.ObjectID, event *Event) error
 	Delete(id primitive.ObjectID) error
 }
@@ -128,7 +128,7 @@ type EventRepository interface {
 type EventService interface {
 	CreateEvent(ctx context.Context, userID primitive.ObjectID, req *CreateEventRequest) (*EventResponse, error)
 	GetEvent(ctx context.Context, eventID, userID primitive.ObjectID) (*EventResponse, error)
-	GetUserEvents(ctx context.Context, userID primitive.ObjectID, partnerID *primitive.ObjectID, year, month, page, limit int) ([]*EventResponse, int64, error)
+	GetCoupleEvents(ctx context.Context, userID primitive.ObjectID, year, month, page, limit int) ([]*EventResponse, int64, error)
 	UpdateEvent(ctx context.Context, eventID, userID primitive.ObjectID, req *UpdateEventRequest) (*EventResponse, error)
 	DeleteEvent(ctx context.Context, eventID, userID primitive.ObjectID) error
 }
